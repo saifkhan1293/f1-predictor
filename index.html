@@ -2138,18 +2138,18 @@
                 // Much smaller realistic gaps between cars
                 let timeGap = 0;
                 
-                // RACE CHAOS AND OVERTAKES - Make F1 unpredictable!
+                // Race dynamics - more realistic F1 outcomes
                 let racePosition = position;
                 
-                // Strategy variations can shake up the order
+                // Strategy variations - reduced impact
                 const strategyLuck = Math.random();
-                if (strategyLuck < 0.15) { // 15% chance of great strategy
-                    racePosition = Math.max(1, racePosition - Math.floor(Math.random() * 4 + 1)); // Gain 1-4 positions
-                } else if (strategyLuck > 0.85) { // 15% chance of bad strategy
-                    racePosition = Math.min(20, racePosition + Math.floor(Math.random() * 3 + 1)); // Lose 1-3 positions
+                if (strategyLuck < 0.08) { // 8% chance of great strategy
+                    racePosition = Math.max(1, racePosition - Math.floor(Math.random() * 2 + 1)); // Gain 1-2 positions
+                } else if (strategyLuck > 0.92) { // 8% chance of bad strategy
+                    racePosition = Math.min(20, racePosition + Math.floor(Math.random() * 2 + 1)); // Lose 1-2 positions
                 }
                 
-                // OVERTAKING CHAOS based on driver skill and track
+                // Overtaking based on driver skill and track characteristics
                 const overtakingChance = (track.characteristics.Overtaking || 50) / 100;
                 const driverOvertakingSkill = {
                     'VER': 0.95, 'HAM': 0.90, 'ALO': 0.88, 'LEC': 0.82, 'NOR': 0.78,
@@ -2158,78 +2158,77 @@
                     'STR': 0.55, 'MAG': 0.62, 'SAR': 0.45, 'ZHO': 0.58
                 }[driverCode] || 0.6;
                 
-                // RACE INCIDENTS AND DRAMA
+                // Race incidents - more realistic frequency
                 const incidentRoll = Math.random();
                 
-                if (incidentRoll < 0.08) { // 8% chance of major incident
+                if (incidentRoll < 0.04) { // 4% chance of major incident
                     // Collision, spin, or major mistake
-                    racePosition += Math.floor(Math.random() * 8 + 3); // Drop 3-10 positions
+                    racePosition += Math.floor(Math.random() * 4 + 2); // Drop 2-5 positions
                     racePosition = Math.min(20, racePosition);
-                } else if (incidentRoll < 0.20) { // 12% chance of minor incident
+                } else if (incidentRoll < 0.12) { // 8% chance of minor incident
                     // Lock up, track limits, small mistake
-                    racePosition += Math.floor(Math.random() * 3 + 1); // Drop 1-3 positions
+                    racePosition += Math.floor(Math.random() * 2 + 1); // Drop 1-2 positions
                     racePosition = Math.min(20, racePosition);
-                } else if (incidentRoll > 0.88 && driverOvertakingSkill > 0.7) {
+                } else if (incidentRoll > 0.92 && driverOvertakingSkill > 0.75) {
                     // Brilliant overtaking move for skilled drivers
-                    racePosition = Math.max(1, racePosition - Math.floor(Math.random() * 3 + 1)); // Gain 1-3 positions
+                    racePosition = Math.max(1, racePosition - Math.floor(Math.random() * 2 + 1)); // Gain 1-2 positions
                 }
                 
-                // SAFETY CAR LOTTERY - Completely shuffles order
-                if (Math.random() < 0.25) { // 25% chance of safety car affecting this driver
+                // Safety car effects - less frequent but still impactful
+                if (Math.random() < 0.15) { // 15% chance of safety car affecting this driver
                     const scLuck = Math.random();
                     if (scLuck < 0.4) { // 40% gain positions (good pit timing)
-                        racePosition = Math.max(1, racePosition - Math.floor(Math.random() * 5 + 1)); // Gain 1-5 positions
+                        racePosition = Math.max(1, racePosition - Math.floor(Math.random() * 3 + 1)); // Gain 1-3 positions
                     } else if (scLuck > 0.7) { // 30% lose positions (bad timing)
-                        racePosition = Math.min(20, racePosition + Math.floor(Math.random() * 4 + 1)); // Lose 1-4 positions
+                        racePosition = Math.min(20, racePosition + Math.floor(Math.random() * 2 + 1)); // Lose 1-2 positions
                     }
                 }
                 
-                // DRS BATTLES - More action on DRS tracks
+                // DRS battles on high overtaking tracks
                 if ((track.characteristics.Overtaking || 50) > 70) {
                     const drsBattle = Math.random();
-                    if (drsBattle < 0.3) { // 30% chance of DRS battle
-                        const positionSwing = Math.floor(Math.random() * 3) + 1; // ±1-3 positions
+                    if (drsBattle < 0.15) { // 15% chance of position change
                         if (Math.random() < 0.5) {
-                            racePosition = Math.max(1, racePosition - positionSwing);
+                            racePosition = Math.max(1, racePosition - 1); // Gain 1 position
                         } else {
-                            racePosition = Math.min(20, racePosition + positionSwing);
+                            racePosition = Math.min(20, racePosition + 1); // Lose 1 position
                         }
                     }
                 }
                 
-                // TIRE STRATEGY BATTLES
+                // Tire strategy effects - reduced frequency
                 const tireStrategy = Math.random();
-                if (tireStrategy < 0.18) { // 18% chance of tire strategy affecting position
+                if (tireStrategy < 0.10) { // 10% chance of tire strategy affecting position
                     if (Math.random() < 0.6) { // Good tire strategy
-                        racePosition = Math.max(1, racePosition - Math.floor(Math.random() * 4 + 1));
+                        racePosition = Math.max(1, racePosition - Math.floor(Math.random() * 2 + 1)); // Gain 1-2 positions
                     } else { // Bad tire degradation
-                        racePosition = Math.min(20, racePosition + Math.floor(Math.random() * 3 + 1));
+                        racePosition = Math.min(20, racePosition + Math.floor(Math.random() * 2 + 1)); // Lose 1-2 positions
                     }
                 }
                 
-                // RAIN CHAOS - Weather can completely change everything
-                if (track.weather.rain > 30) {
+                // Rain effects - only when significant rain chance
+                if (track.weather.rain > 40) {
                     const rainMasters = ['VER', 'HAM', 'ALO', 'RUS', 'GAS', 'BOT'];
                     const rainRoll = Math.random();
                     
-                    if (rainRoll < 0.35) { // 35% chance rain affects this driver
+                    if (rainRoll < 0.20) { // 20% chance rain affects this driver
                         if (rainMasters.includes(driverCode)) {
                             // Rain masters gain positions
-                            racePosition = Math.max(1, racePosition - Math.floor(Math.random() * 6 + 2)); // Gain 2-7 positions!
+                            racePosition = Math.max(1, racePosition - Math.floor(Math.random() * 3 + 1)); // Gain 1-3 positions
                         } else {
                             // Others struggle in rain
-                            racePosition = Math.min(20, racePosition + Math.floor(Math.random() * 5 + 1)); // Lose 1-5 positions
+                            racePosition = Math.min(20, racePosition + Math.floor(Math.random() * 2 + 1)); // Lose 1-2 positions
                         }
                     }
                 }
                 
-                // TRACK-SPECIFIC CHAOS
-                if (currentTrack === 'monaco' && Math.random() < 0.4) {
-                    // Monaco chaos - crashes, barriers
-                    racePosition += Math.floor(Math.random() * 4);
-                } else if (currentTrack === 'baku' && Math.random() < 0.3) {
-                    // Baku madness
-                    const chaosLevel = Math.floor(Math.random() * 8) - 3; // ±3-4 positions
+                // Track-specific effects - toned down
+                if (currentTrack === 'monaco' && Math.random() < 0.15) {
+                    // Monaco incidents
+                    racePosition += Math.floor(Math.random() * 2 + 1); // Drop 1-2 positions
+                } else if (currentTrack === 'azerbaijan' && Math.random() < 0.12) {
+                    // Baku unpredictability
+                    const chaosLevel = Math.floor(Math.random() * 3) - 1; // ±1 position
                     racePosition = Math.max(1, Math.min(20, racePosition + chaosLevel));
                 }
                 
@@ -2310,6 +2309,15 @@
             let finishPosition = 1;
             let cumulativeTime = 0;
             
+            // Pre-calculate track multipliers
+            const overtaking = track.characteristics.Overtaking || 50;
+            let trackMultiplier = 1.0;
+            if (overtaking > 75) {
+                trackMultiplier = 0.8; // Closer racing on overtaking tracks
+            } else if (overtaking < 40) {
+                trackMultiplier = 1.3; // Bigger gaps on processional tracks
+            }
+            
             raceResults.forEach((result, index) => {
                 if (!result.isDNF) {
                     result.finishPosition = finishPosition++;
@@ -2332,21 +2340,16 @@
                             gapToNext = Math.random() * 12 + 3; // 3-15 seconds for back markers
                         }
                         
+                        // Apply track multiplier to the gap increment
+                        gapToNext *= trackMultiplier;
+                        
+                        // Safety car effect - 30% chance to reduce gap to next car
+                        if (Math.random() < 0.3) {
+                            gapToNext *= 0.6; // Safety car bunches up field
+                        }
+                        
                         cumulativeTime += gapToNext;
                         result.timeGap = cumulativeTime;
-                    }
-                    
-                    // Track-specific adjustments to overall gaps
-                    const overtaking = track.characteristics.Overtaking || 50;
-                    if (overtaking > 75 && result.finishPosition > 1) {
-                        result.timeGap *= 0.8; // Closer racing on overtaking tracks
-                    } else if (overtaking < 40 && result.finishPosition > 1) {
-                        result.timeGap *= 1.3; // Bigger gaps on processional tracks
-                    }
-                    
-                    // Safety car effect - randomly bunches up some drivers
-                    if (Math.random() < 0.3 && result.finishPosition > 1) { // 30% chance
-                        result.timeGap *= 0.6; // Safety car reduces gaps
                     }
                 } else {
                     result.finishPosition = 'DNF';
