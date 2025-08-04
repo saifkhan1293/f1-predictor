@@ -1027,49 +1027,6 @@
             </div>
         </div>
 
-        <!-- Podium Predictions -->
-        <div class="card">
-            <div class="card-header">
-                <h2 class="card-title">🏆 Podium Predictions</h2>
-                <span class="info-icon" title="AI-powered predictions based on track characteristics, qualifying, weather, and historical data">?</span>
-            </div>
-            <div class="podium-container">
-                <div class="podium-position position-2">
-                    <div class="driver-card">
-                        <div class="driver-name">NOR</div>
-                        <div class="team-name">McLaren</div>
-                        <div class="prediction-confidence">94.2% confidence</div>
-                        <div class="confidence-bar">
-                            <div class="confidence-fill" style="width: 94.2%"></div>
-                        </div>
-                    </div>
-                    <div class="podium-stand">2</div>
-                </div>
-                <div class="podium-position position-1">
-                    <div class="driver-card">
-                        <div class="driver-name">VER</div>
-                        <div class="team-name">Red Bull</div>
-                        <div class="prediction-confidence">96.8% confidence</div>
-                        <div class="confidence-bar">
-                            <div class="confidence-fill" style="width: 96.8%"></div>
-                        </div>
-                    </div>
-                    <div class="podium-stand">1</div>
-                </div>
-                <div class="podium-position position-3">
-                    <div class="driver-card">
-                        <div class="driver-name">PIA</div>
-                        <div class="team-name">McLaren</div>
-                        <div class="prediction-confidence">91.5% confidence</div>
-                        <div class="confidence-bar">
-                            <div class="confidence-fill" style="width: 91.5%"></div>
-                        </div>
-                    </div>
-                    <div class="podium-stand">3</div>
-                </div>
-            </div>
-        </div>
-
         <div class="dashboard-grid">
             <!-- Weather Conditions -->
             <div class="card">
@@ -1123,6 +1080,17 @@
             </div>
             <div class="feature-bars" id="feature-bars">
                 <!-- Feature bars will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Podium Predictions -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">🏆 Podium Predictions</h2>
+                <span class="info-icon" title="AI-powered predictions based on track characteristics, qualifying, weather, and historical data">?</span>
+            </div>
+            <div class="podium-container" id="podium-container">
+                <!-- Podium will be populated dynamically by JavaScript -->
             </div>
         </div>
 
@@ -2085,21 +2053,40 @@
             }
         }
 
-        // Update podium display
+        // Update podium display with actual prediction data
         function updatePodium(topThree) {
-            const positions = ['position-2', 'position-1', 'position-3']; // 2nd, 1st, 3rd
-            const podiumOrder = [topThree[1], topThree[0], topThree[2]]; // Reorder for display
+            const podiumContainer = document.getElementById('podium-container');
             
-            positions.forEach((posClass, index) => {
-                const driver = podiumOrder[index];
-                if (driver) {
-                    const element = document.querySelector(`.${posClass}`);
-                    element.querySelector('.driver-name').textContent = driver[0];
-                    element.querySelector('.team-name').textContent = driver[1].team;
-                    element.querySelector('.prediction-confidence').textContent = 
-                        `${driver[1].confidence.toFixed(1)}% confidence`;
-                    element.querySelector('.confidence-fill').style.width = 
-                        `${driver[1].confidence}%`;
+            // Clear existing content
+            podiumContainer.innerHTML = '';
+            
+            // Create podium positions in display order: 2nd, 1st, 3rd
+            const podiumOrder = [
+                { data: topThree[1], position: 2, class: 'position-2' },
+                { data: topThree[0], position: 1, class: 'position-1' },
+                { data: topThree[2], position: 3, class: 'position-3' }
+            ];
+            
+            podiumOrder.forEach(({ data, position, class: posClass }) => {
+                if (data) {
+                    const [driverCode, driverData] = data;
+                    
+                    const podiumDiv = document.createElement('div');
+                    podiumDiv.className = `podium-position ${posClass}`;
+                    
+                    podiumDiv.innerHTML = `
+                        <div class="driver-card">
+                            <div class="driver-name">${driverCode}</div>
+                            <div class="team-name">${driverData.team}</div>
+                            <div class="prediction-confidence">${driverData.confidence.toFixed(1)}% confidence</div>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" style="width: ${driverData.confidence}%"></div>
+                            </div>
+                        </div>
+                        <div class="podium-stand">${position}</div>
+                    `;
+                    
+                    podiumContainer.appendChild(podiumDiv);
                 }
             });
         }
