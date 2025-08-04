@@ -1,0 +1,2603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>F1 AI Race Predictor - 2025 Season</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --f1-red: #e10600;
+            --f1-black: #15151e;
+            --f1-white: #ffffff;
+            --f1-gray: #38383f;
+            --bg-dark: #0a0a0f;
+            --card-bg: rgba(21, 21, 30, 0.9);
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a8;
+            --accent-blue: #0090ff;
+            --accent-green: #00d464;
+            --accent-yellow: #ffd700;
+            --accent-silver: #c0c0c0;
+            --accent-bronze: #cd7f32;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(225, 6, 0, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(0, 144, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(0, 212, 100, 0.05) 0%, transparent 50%);
+            z-index: -1;
+            animation: gradientShift 20s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.1); }
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--f1-black) 0%, var(--f1-gray) 100%);
+            padding: 1rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo h1 {
+            font-size: 1.5rem;
+            font-weight: 900;
+            background: linear-gradient(90deg, var(--f1-red) 0%, var(--accent-blue) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .race-info {
+            text-align: center;
+            flex: 1;
+        }
+
+        .race-info h2 {
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .race-info p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .model-status {
+            padding: 0.5rem 1rem;
+            background: rgba(0, 144, 255, 0.1);
+            border: 1px solid rgba(0, 144, 255, 0.3);
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: var(--accent-blue);
+        }
+
+        /* Main container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        /* Track Selector */
+        .track-selector {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .track-selector h2 {
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .track-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .track-option {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .track-option:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(0, 144, 255, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .track-option.active {
+            background: rgba(0, 144, 255, 0.15);
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 20px rgba(0, 144, 255, 0.3);
+        }
+
+        .track-flag {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .track-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .track-details {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        /* Track characteristics */
+        .track-characteristics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .characteristic {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .characteristic-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .characteristic-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--accent-blue);
+        }
+
+        /* Grid layout */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 40px rgba(0, 144, 255, 0.2);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        /* Podium prediction */
+        .podium-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 1rem;
+            margin: 2rem 0;
+            min-height: 280px;
+        }
+
+        .podium-position {
+            text-align: center;
+            flex: 1;
+            max-width: 150px;
+            opacity: 0;
+            animation: slideUp 0.6s ease forwards;
+        }
+
+        .podium-position:nth-child(1) { animation-delay: 0.2s; }
+        .podium-position:nth-child(2) { animation-delay: 0s; }
+        .podium-position:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .driver-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .position-1 .driver-card {
+            border-color: var(--accent-yellow);
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.4);
+        }
+
+        .position-2 .driver-card {
+            border-color: var(--accent-silver);
+            box-shadow: 0 0 20px rgba(192, 192, 192, 0.4);
+        }
+
+        .position-3 .driver-card {
+            border-color: var(--accent-bronze);
+            box-shadow: 0 0 20px rgba(205, 127, 50, 0.4);
+        }
+
+        .driver-name {
+            font-size: 1.5rem;
+            font-weight: 900;
+            margin-bottom: 0.25rem;
+        }
+
+        .team-name {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .prediction-confidence {
+            font-size: 0.9rem;
+            color: var(--accent-green);
+            font-weight: 600;
+        }
+
+        .podium-stand {
+            height: var(--stand-height);
+            background: linear-gradient(180deg, var(--stand-color) 0%, rgba(255, 255, 255, 0.05) 100%);
+            border-radius: 8px 8px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            font-weight: 900;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .position-1 {
+            --stand-height: 120px;
+            --stand-color: rgba(255, 215, 0, 0.3);
+        }
+
+        .position-2 {
+            --stand-height: 100px;
+            --stand-color: rgba(192, 192, 192, 0.3);
+        }
+
+        .position-3 {
+            --stand-height: 80px;
+            --stand-color: rgba(205, 127, 50, 0.3);
+        }
+
+        /* Weather widget */
+        .weather-widget {
+            background: linear-gradient(135deg, rgba(0, 144, 255, 0.1) 0%, rgba(0, 144, 255, 0.05) 100%);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .weather-icon {
+            font-size: 3rem;
+        }
+
+        .weather-details h3 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .weather-details p {
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        .rain-probability {
+            text-align: center;
+            background: rgba(0, 144, 255, 0.1);
+            border-radius: 8px;
+            padding: 1rem;
+            min-width: 100px;
+        }
+
+        .rain-probability .percentage {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent-blue);
+        }
+
+        /* Performance metrics */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .metric-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.25rem;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .metric-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: scale(1.02);
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 900;
+            background: linear-gradient(90deg, var(--accent-blue) 0%, var(--accent-green) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .metric-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+
+        /* Feature importance chart */
+        .feature-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .feature-bar {
+            position: relative;
+        }
+
+        .feature-name {
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        .bar-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            height: 30px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-blue) 0%, var(--accent-green) 100%);
+            border-radius: 8px;
+            transition: width 1s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 0.5rem;
+        }
+
+        .bar-value {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Full results table */
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .results-table th {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-secondary);
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .results-table td {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .results-table tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .position-badge {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--f1-gray);
+            color: var(--text-primary);
+            text-align: center;
+            line-height: 30px;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .position-badge.dnf { 
+            background: var(--f1-red); 
+            color: var(--text-primary); 
+            font-size: 0.7rem;
+            width: 35px;
+        }
+
+        .status-lapped {
+            color: var(--f1-red);
+            font-weight: 600;
+        }
+
+        .status-finished {
+            color: var(--accent-green);
+        }
+
+        .position-change-positive {
+            color: var(--accent-green);
+            font-weight: 700;
+        }
+
+        .position-change-negative {
+            color: var(--f1-red);
+            font-weight: 700;
+        }
+
+        .position-change-neutral {
+            color: var(--text-secondary);
+        }
+
+        /* Model Tuning Panel */
+        .tuning-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .tuning-description {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-tuner {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 1.25rem;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .feature-tuner:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(0, 144, 255, 0.3);
+        }
+
+        .tuner-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .tuner-label {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .tuner-value {
+            font-weight: 700;
+            color: var(--accent-blue);
+            font-size: 1.1rem;
+            min-width: 50px;
+            text-align: right;
+        }
+
+        .tuner-slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+            cursor: pointer;
+            margin-bottom: 0.5rem;
+        }
+
+        .tuner-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--accent-blue);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0, 144, 255, 0.5);
+        }
+
+        .tuner-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--accent-blue);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0, 144, 255, 0.5);
+        }
+
+        .tuner-slider:hover::-webkit-slider-thumb {
+            transform: scale(1.2);
+            background: var(--accent-green);
+            box-shadow: 0 2px 20px rgba(0, 212, 100, 0.7);
+        }
+
+        .tuner-slider:hover::-moz-range-thumb {
+            transform: scale(1.2);
+            background: var(--accent-green);
+            box-shadow: 0 2px 20px rgba(0, 212, 100, 0.7);
+        }
+
+        .tuner-info {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        .tuning-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+            flex: 1;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-green) 100%);
+            color: var(--text-primary);
+            box-shadow: 0 4px 15px rgba(0, 144, 255, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(0, 144, 255, 0.5);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-secondary);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: var(--text-primary);
+        }
+
+        /* Confidence indicator */
+        .confidence-bar {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: var(--accent-green);
+            transition: width 1s ease;
+        }
+
+        /* Info tooltip */
+        .info-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            cursor: help;
+            transition: all 0.3s ease;
+        }
+
+        .info-icon:hover {
+            background: var(--accent-blue);
+            color: var(--text-primary);
+        }
+
+        /* Qualifying Grid Styles */
+        .qualifying-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .quali-position {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .quali-position:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .quali-pos-number {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--f1-gray);
+            color: var(--text-primary);
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-right: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .quali-pos-number.pole { background: var(--accent-yellow); color: var(--f1-black); }
+        .quali-pos-number.front-row { background: var(--accent-silver); color: var(--f1-black); }
+        .quali-pos-number.q3 { background: var(--accent-green); color: var(--f1-black); }
+
+        .quali-driver-info {
+            flex: 1;
+        }
+
+        .quali-driver-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+        }
+
+        .quali-team-name {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .quali-time {
+            font-size: 0.85rem;
+            color: var(--accent-blue);
+            font-weight: 600;
+        }
+
+        .quali-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .quali-actions .btn {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+        }
+
+        /* Edit Mode Styles */
+        .quali-edit-panel {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 1rem;
+        }
+
+        .quali-edit-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 0.75rem;
+            margin: 1rem 0;
+        }
+
+        .quali-edit-item {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 0.75rem;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            cursor: grab;
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+
+        .quali-edit-item:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: var(--accent-blue);
+        }
+
+        .quali-edit-item.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+            transform: rotate(2deg);
+        }
+
+        .quali-edit-item.drag-over {
+            border-color: var(--accent-green);
+            background: rgba(0, 212, 100, 0.1);
+        }
+
+        .quali-edit-pos {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: var(--accent-blue);
+            color: var(--text-primary);
+            font-weight: 700;
+            font-size: 0.8rem;
+            margin-right: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .quali-edit-driver {
+            flex: 1;
+        }
+
+        .quali-edit-driver-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        .quali-edit-team {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+        @media (max-width: 768px) {
+            .header-content {
+                justify-content: center;
+                text-align: center;
+            }
+
+            .logo h1 {
+                font-size: 1.25rem;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .track-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+
+            .podium-container {
+                flex-direction: column;
+                align-items: center;
+                gap: 1.5rem;
+            }
+
+            .podium-position {
+                max-width: 250px;
+                width: 100%;
+            }
+
+            .podium-stand {
+                height: 60px !important;
+            }
+
+            .weather-widget {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .results-table {
+                font-size: 0.85rem;
+            }
+
+            .results-table th,
+            .results-table td {
+                padding: 0.75rem 0.5rem;
+            }
+
+            .hide-mobile {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <h1>F1 AI PREDICTOR</h1>
+            </div>
+            <div class="race-info">
+                <h2 id="current-race-name">Austrian Grand Prix 2025</h2>
+                <p id="current-track-info">Red Bull Ring • Sprint Weekend</p>
+            </div>
+            <div class="model-status">
+                <span>XGBoost Model v2.0</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Track Selector -->
+        <div class="track-selector">
+            <h2>🏁 Select Race Track</h2>
+            <div class="track-grid" id="track-grid">
+                <!-- Tracks will be populated by JavaScript -->
+            </div>
+            <div class="track-characteristics" id="track-characteristics">
+                <!-- Track characteristics will be shown here -->
+            </div>
+        </div>
+
+        <!-- Model Tuning Panel -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">🎛️ Fine-Tune Model</h2>
+                <span class="info-icon" title="Adjust feature importance to see how predictions change">?</span>
+            </div>
+            <div class="tuning-panel">
+                <p class="tuning-description">Adjust the importance of each feature to see how it affects race predictions:</p>
+                
+                <div class="feature-tuner">
+                    <div class="tuner-header">
+                        <span class="tuner-label">Track Suitability</span>
+                        <span class="tuner-value" id="track-value">85%</span>
+                    </div>
+                    <input type="range" class="tuner-slider" id="track-slider" min="0" max="100" value="85">
+                    <p class="tuner-info">How well each driver/team performs on this specific track</p>
+                </div>
+                
+                <div class="feature-tuner">
+                    <div class="tuner-header">
+                        <span class="tuner-label">Clean Air Race Pace</span>
+                        <span class="tuner-value" id="pace-value">90%</span>
+                    </div>
+                    <input type="range" class="tuner-slider" id="pace-slider" min="0" max="100" value="90">
+                    <p class="tuner-info">Historical average lap times in clean air</p>
+                </div>
+
+                <div class="feature-tuner">
+                    <div class="tuner-header">
+                        <span class="tuner-label">Qualifying Performance</span>
+                        <span class="tuner-value" id="quali-value">85%</span>
+                    </div>
+                    <input type="range" class="tuner-slider" id="quali-slider" min="0" max="100" value="85">
+                    <p class="tuner-info">Grid position impact and overtaking difficulty - Higher values make qualifying position MORE important</p>
+                </div>
+
+                <div class="feature-tuner">
+                    <div class="tuner-header">
+                        <span class="tuner-label">Team Performance</span>
+                        <span class="tuner-value" id="team-value">68%</span>
+                    </div>
+                    <input type="range" class="tuner-slider" id="team-slider" min="0" max="100" value="68">
+                    <p class="tuner-info">Constructor standings and recent form</p>
+                </div>
+
+                <div class="feature-tuner">
+                    <div class="tuner-header">
+                        <span class="tuner-label">Weather Impact</span>
+                        <span class="tuner-value" id="weather-value">45%</span>
+                    </div>
+                    <input type="range" class="tuner-slider" id="weather-slider" min="0" max="100" value="45">
+                    <p class="tuner-info">Rain probability and track conditions</p>
+                </div>
+
+                <div class="tuning-actions">
+                    <button class="btn btn-primary" onclick="updatePredictions()">Update Predictions</button>
+                    <button class="btn btn-secondary" onclick="resetWeights()">Reset to Default</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Qualifying Grid Section -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">🏁 Qualifying Grid</h2>
+                <div class="quali-actions">
+                    <button class="btn btn-secondary" onclick="regenerateQualifying()">🔄 Regenerate</button>
+                    <button class="btn btn-secondary" onclick="toggleQualiEdit()">✏️ Edit Grid</button>
+                </div>
+            </div>
+            <div id="qualifying-grid" class="qualifying-grid">
+                <!-- Qualifying grid will be populated by JavaScript -->
+            </div>
+            <div id="quali-edit-mode" class="quali-edit-panel" style="display: none;">
+                <p class="tuning-description">Drag and drop drivers to customize the qualifying grid:</p>
+                <div id="quali-edit-grid" class="quali-edit-grid">
+                    <!-- Editable qualifying grid -->
+                </div>
+                <div class="tuning-actions">
+                    <button class="btn btn-primary" onclick="applyQualiChanges()">Apply Changes</button>
+                    <button class="btn btn-secondary" onclick="cancelQualiEdit()">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Podium Predictions -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">🏆 Podium Predictions</h2>
+                <span class="info-icon" title="AI-powered predictions based on track characteristics, qualifying, weather, and historical data">?</span>
+            </div>
+            <div class="podium-container">
+                <div class="podium-position position-2">
+                    <div class="driver-card">
+                        <div class="driver-name">NOR</div>
+                        <div class="team-name">McLaren</div>
+                        <div class="prediction-confidence">94.2% confidence</div>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" style="width: 94.2%"></div>
+                        </div>
+                    </div>
+                    <div class="podium-stand">2</div>
+                </div>
+                <div class="podium-position position-1">
+                    <div class="driver-card">
+                        <div class="driver-name">VER</div>
+                        <div class="team-name">Red Bull</div>
+                        <div class="prediction-confidence">96.8% confidence</div>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" style="width: 96.8%"></div>
+                        </div>
+                    </div>
+                    <div class="podium-stand">1</div>
+                </div>
+                <div class="podium-position position-3">
+                    <div class="driver-card">
+                        <div class="driver-name">PIA</div>
+                        <div class="team-name">McLaren</div>
+                        <div class="prediction-confidence">91.5% confidence</div>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" style="width: 91.5%"></div>
+                        </div>
+                    </div>
+                    <div class="podium-stand">3</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Weather Conditions -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">🌤️ Track Conditions</h2>
+                </div>
+                <div class="weather-widget">
+                    <div class="weather-icon" id="weather-icon">☀️</div>
+                    <div class="weather-details">
+                        <h3 id="weather-temp">23°C</h3>
+                        <p id="weather-desc">Partly Cloudy • Light Wind</p>
+                    </div>
+                    <div class="rain-probability">
+                        <div class="percentage" id="rain-chance">15%</div>
+                        <p>Rain Chance</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Model Performance -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">📊 Model Performance</h2>
+                </div>
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-value" id="model-error">2.41s</div>
+                        <div class="metric-label">Mean Error</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="model-accuracy">87%</div>
+                        <div class="metric-label">Accuracy</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">500</div>
+                        <div class="metric-label">Trees</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">0.7</div>
+                        <div class="metric-label">Learning Rate</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feature Importance -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">🔍 Feature Importance</h2>
+                <span class="info-icon" title="How much each factor influences the predictions for this track">?</span>
+            </div>
+            <div class="feature-bars" id="feature-bars">
+                <!-- Feature bars will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Qualifying Grid Section -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">🏁 Qualifying Grid</h2>
+                <div class="quali-actions">
+                    <button class="btn btn-secondary" onclick="regenerateQualifying()">🔄 Regenerate</button>
+                    <button class="btn btn-secondary" onclick="toggleQualiEdit()">✏️ Edit Grid</button>
+                </div>
+            </div>
+            <div id="qualifying-grid" class="qualifying-grid">
+                <!-- Qualifying grid will be populated by JavaScript -->
+            </div>
+            <div id="quali-edit-mode" class="quali-edit-panel" style="display: none;">
+                <p class="tuning-description">Drag and drop drivers to customize the qualifying grid:</p>
+                <div id="quali-edit-grid" class="quali-edit-grid">
+                    <!-- Editable qualifying grid -->
+                </div>
+                <div class="tuning-actions">
+                    <button class="btn btn-primary" onclick="applyQualiChanges()">Apply Changes</button>
+                    <button class="btn btn-secondary" onclick="cancelQualiEdit()">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Full Race Results Table -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">🏁 Complete Race Results</h2>
+                <span class="info-icon" title="Full race simulation showing all 20 drivers with realistic time gaps, positions gained/lost, and lapped status">?</span>
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>Pos</th>
+                            <th>Driver</th>
+                            <th>Team</th>
+                            <th>Time/Gap</th>
+                            <th class="hide-mobile">Grid</th>
+                            <th class="hide-mobile">+/-</th>
+                            <th class="hide-mobile">Status</th>
+                            <th class="hide-mobile">Confidence</th>
+                        </tr>
+                    </thead>
+                    <tbody id="results-tbody">
+                        <!-- Results will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // F1 2025 Calendar with track characteristics
+        const f1Tracks = {
+            'bahrain': {
+                name: 'Bahrain Grand Prix',
+                location: 'Bahrain International Circuit',
+                flag: '🇧🇭',
+                length: '5.412km',
+                laps: 57,
+                type: 'Desert',
+                weather: { temp: 28, icon: '☀️', desc: 'Hot & Dry', rain: 5 },
+                characteristics: {
+                    'Power': 85,
+                    'Downforce': 60,
+                    'Braking': 90,
+                    'Tires': 75,
+                    'Overtaking': 80
+                },
+                teamSuitability: {
+                    'Red Bull': 0.92, 'McLaren': 0.88, 'Ferrari': 0.85, 'Mercedes': 0.82,
+                    'Aston Martin': 0.65, 'Alpine': 0.60, 'Williams': 0.55, 'RB': 0.58,
+                    'Haas': 0.52, 'Kick Sauber': 0.48
+                }
+            },
+            'saudi': {
+                name: 'Saudi Arabian Grand Prix',
+                location: 'Jeddah Corniche Circuit',
+                flag: '🇸🇦',
+                length: '6.174km',
+                laps: 50,
+                type: 'Street',
+                weather: { temp: 26, icon: '🌙', desc: 'Night Race • Clear', rain: 2 },
+                characteristics: {
+                    'Power': 95,
+                    'Downforce': 40,
+                    'Braking': 85,
+                    'Tires': 70,
+                    'Overtaking': 60
+                },
+                teamSuitability: {
+                    'Red Bull': 0.90, 'Ferrari': 0.87, 'McLaren': 0.85, 'Mercedes': 0.83,
+                    'Aston Martin': 0.62, 'Alpine': 0.58, 'Williams': 0.56, 'RB': 0.60,
+                    'Haas': 0.54, 'Kick Sauber': 0.50
+                }
+            },
+            'australia': {
+                name: 'Australian Grand Prix',
+                location: 'Albert Park Circuit',
+                flag: '🇦🇺',
+                length: '5.278km',
+                laps: 58,
+                type: 'Semi-Street',
+                weather: { temp: 22, icon: '⛅', desc: 'Partly Cloudy', rain: 25 },
+                characteristics: {
+                    'Power': 75,
+                    'Downforce': 70,
+                    'Braking': 80,
+                    'Tires': 85,
+                    'Overtaking': 70
+                },
+                teamSuitability: {
+                    'McLaren': 0.90, 'Red Bull': 0.88, 'Ferrari': 0.82, 'Mercedes': 0.80,
+                    'Aston Martin': 0.68, 'Alpine': 0.62, 'Williams': 0.58, 'RB': 0.56,
+                    'Haas': 0.55, 'Kick Sauber': 0.52
+                }
+            },
+            'japan': {
+                name: 'Japanese Grand Prix',
+                location: 'Suzuka International Racing Course',
+                flag: '🇯🇵',
+                length: '5.807km',
+                laps: 53,
+                type: 'Permanent',
+                weather: { temp: 20, icon: '🌦️', desc: 'Variable Conditions', rain: 40 },
+                characteristics: {
+                    'Power': 80,
+                    'Downforce': 85,
+                    'Braking': 75,
+                    'Tires': 90,
+                    'Overtaking': 55
+                },
+                teamSuitability: {
+                    'Red Bull': 0.95, 'McLaren': 0.87, 'Ferrari': 0.83, 'Mercedes': 0.81,
+                    'Aston Martin': 0.70, 'Alpine': 0.65, 'Williams': 0.60, 'RB': 0.62,
+                    'Haas': 0.56, 'Kick Sauber': 0.54
+                }
+            },
+            'china': {
+                name: 'Chinese Grand Prix',
+                location: 'Shanghai International Circuit',
+                flag: '🇨🇳',
+                length: '5.451km',
+                laps: 56,
+                type: 'Permanent',
+                weather: { temp: 18, icon: '🌫️', desc: 'Overcast • Humid', rain: 35 },
+                characteristics: {
+                    'Power': 85,
+                    'Downforce': 75,
+                    'Braking': 80,
+                    'Tires': 80,
+                    'Overtaking': 75
+                },
+                teamSuitability: {
+                    'Red Bull': 0.91, 'Ferrari': 0.86, 'McLaren': 0.84, 'Mercedes': 0.82,
+                    'Aston Martin': 0.66, 'Alpine': 0.61, 'Williams': 0.57, 'RB': 0.59,
+                    'Haas': 0.53, 'Kick Sauber': 0.51
+                }
+            },
+            'miami': {
+                name: 'Miami Grand Prix',
+                location: 'Miami International Autodrome',
+                flag: '🇺🇸',
+                length: '5.412km',
+                laps: 57,
+                type: 'Street',
+                weather: { temp: 32, icon: '🌞', desc: 'Hot & Humid', rain: 45 },
+                characteristics: {
+                    'Power': 80,
+                    'Downforce': 65,
+                    'Braking': 85,
+                    'Tires': 95,
+                    'Overtaking': 70
+                },
+                teamSuitability: {
+                    'McLaren': 0.89, 'Red Bull': 0.87, 'Ferrari': 0.84, 'Mercedes': 0.81,
+                    'Aston Martin': 0.67, 'Alpine': 0.63, 'Williams': 0.59, 'RB': 0.57,
+                    'Haas': 0.56, 'Kick Sauber': 0.53
+                }
+            },
+            'emilia-romagna': {
+                name: 'Emilia-Romagna Grand Prix',
+                location: 'Autodromo Enzo e Dino Ferrari',
+                flag: '🇮🇹',
+                length: '4.909km',
+                laps: 63,
+                type: 'Permanent',
+                weather: { temp: 24, icon: '⛅', desc: 'Mild & Breezy', rain: 30 },
+                characteristics: {
+                    'Power': 70,
+                    'Downforce': 80,
+                    'Braking': 75,
+                    'Tires': 85,
+                    'Overtaking': 45
+                },
+                teamSuitability: {
+                    'Red Bull': 0.93, 'Ferrari': 0.89, 'McLaren': 0.85, 'Mercedes': 0.79,
+                    'Aston Martin': 0.69, 'Alpine': 0.64, 'Williams': 0.58, 'RB': 0.61,
+                    'Haas': 0.55, 'Kick Sauber': 0.52
+                }
+            },
+            'monaco': {
+                name: 'Monaco Grand Prix',
+                location: 'Circuit de Monaco',
+                flag: '🇲🇨',
+                length: '3.337km',
+                laps: 78,
+                type: 'Street',
+                weather: { temp: 25, icon: '☀️', desc: 'Sunny & Warm', rain: 15 },
+                characteristics: {
+                    'Power': 30,
+                    'Downforce': 95,
+                    'Braking': 70,
+                    'Tires': 60,
+                    'Overtaking': 20
+                },
+                teamSuitability: {
+                    'Ferrari': 0.88, 'Red Bull': 0.85, 'McLaren': 0.83, 'Mercedes': 0.80,
+                    'Aston Martin': 0.72, 'Alpine': 0.68, 'Williams': 0.64, 'RB': 0.62,
+                    'Haas': 0.58, 'Kick Sauber': 0.55
+                }
+            },
+            'canada': {
+                name: 'Canadian Grand Prix',
+                location: 'Circuit Gilles-Villeneuve',
+                flag: '🇨🇦',
+                length: '4.361km',
+                laps: 70,
+                type: 'Semi-Street',
+                weather: { temp: 21, icon: '🌦️', desc: 'Changeable Weather', rain: 50 },
+                characteristics: {
+                    'Power': 90,
+                    'Downforce': 50,
+                    'Braking': 90,
+                    'Tires': 75,
+                    'Overtaking': 85
+                },
+                teamSuitability: {
+                    'Red Bull': 0.90, 'McLaren': 0.87, 'Ferrari': 0.84, 'Mercedes': 0.82,
+                    'Aston Martin': 0.65, 'Alpine': 0.61, 'Williams': 0.58, 'RB': 0.59,
+                    'Haas': 0.54, 'Kick Sauber': 0.51
+                }
+            },
+            'spain': {
+                name: 'Spanish Grand Prix',
+                location: 'Circuit de Barcelona-Catalunya',
+                flag: '🇪🇸',
+                length: '4.675km',
+                laps: 66,
+                type: 'Permanent',
+                weather: { temp: 27, icon: '☀️', desc: 'Hot & Dry', rain: 10 },
+                characteristics: {
+                    'Power': 75,
+                    'Downforce': 85,
+                    'Braking': 70,
+                    'Tires': 90,
+                    'Overtaking': 55
+                },
+                teamSuitability: {
+                    'Red Bull': 0.94, 'McLaren': 0.88, 'Ferrari': 0.86, 'Mercedes': 0.83,
+                    'Aston Martin': 0.68, 'Alpine': 0.63, 'Williams': 0.59, 'RB': 0.61,
+                    'Haas': 0.56, 'Kick Sauber': 0.53
+                }
+            },
+            'austria': {
+                name: 'Austrian Grand Prix',
+                location: 'Red Bull Ring',
+                flag: '🇦🇹',
+                length: '4.318km',
+                laps: 71,
+                type: 'Permanent',
+                weather: { temp: 23, icon: '⛅', desc: 'Partly Cloudy • Light Wind', rain: 15 },
+                characteristics: {
+                    'Power': 85,
+                    'Downforce': 60,
+                    'Braking': 80,
+                    'Tires': 85,
+                    'Overtaking': 80
+                },
+                teamSuitability: {
+                    'Red Bull': 0.96, 'McLaren': 0.89, 'Ferrari': 0.84, 'Mercedes': 0.81,
+                    'Aston Martin': 0.67, 'Alpine': 0.62, 'Williams': 0.58, 'RB': 0.60,
+                    'Haas': 0.55, 'Kick Sauber': 0.52
+                }
+            },
+            'britain': {
+                name: 'British Grand Prix',
+                location: 'Silverstone Circuit',
+                flag: '🇬🇧',
+                length: '5.891km',
+                laps: 52,
+                type: 'Permanent',
+                weather: { temp: 19, icon: '🌦️', desc: 'Typical British Weather', rain: 60 },
+                characteristics: {
+                    'Power': 80,
+                    'Downforce': 80,
+                    'Braking': 75,
+                    'Tires': 85,
+                    'Overtaking': 70
+                },
+                teamSuitability: {
+                    'McLaren': 0.91, 'Red Bull': 0.89, 'Ferrari': 0.85, 'Mercedes': 0.88,
+                    'Aston Martin': 0.71, 'Alpine': 0.66, 'Williams': 0.62, 'RB': 0.58,
+                    'Haas': 0.57, 'Kick Sauber': 0.54
+                }
+            },
+            'hungary': {
+                name: 'Hungarian Grand Prix',
+                location: 'Hungaroring',
+                flag: '🇭🇺',
+                length: '4.381km',
+                laps: 70,
+                type: 'Permanent',
+                weather: { temp: 29, icon: '🌞', desc: 'Hot & Sunny', rain: 20 },
+                characteristics: {
+                    'Power': 60,
+                    'Downforce': 90,
+                    'Braking': 70,
+                    'Tires': 95,
+                    'Overtaking': 40
+                },
+                teamSuitability: {
+                    'Red Bull': 0.92, 'McLaren': 0.87, 'Ferrari': 0.85, 'Mercedes': 0.82,
+                    'Aston Martin': 0.70, 'Alpine': 0.65, 'Williams': 0.60, 'RB': 0.62,
+                    'Haas': 0.57, 'Kick Sauber': 0.54
+                }
+            },
+            'belgium': {
+                name: 'Belgian Grand Prix',
+                location: 'Circuit de Spa-Francorchamps',
+                flag: '🇧🇪',
+                length: '7.004km',
+                laps: 44,
+                type: 'Permanent',
+                weather: { temp: 17, icon: '🌧️', desc: 'Cool & Rainy', rain: 70 },
+                characteristics: {
+                    'Power': 95,
+                    'Downforce': 55,
+                    'Braking': 85,
+                    'Tires': 80,
+                    'Overtaking': 85
+                },
+                teamSuitability: {
+                    'Red Bull': 0.93, 'Ferrari': 0.88, 'McLaren': 0.86, 'Mercedes': 0.84,
+                    'Aston Martin': 0.68, 'Alpine': 0.64, 'Williams': 0.61, 'RB': 0.59,
+                    'Haas': 0.56, 'Kick Sauber': 0.53
+                }
+            },
+            'netherlands': {
+                name: 'Dutch Grand Prix',
+                location: 'Circuit Zandvoort',
+                flag: '🇳🇱',
+                length: '4.259km',
+                laps: 72,
+                type: 'Permanent',
+                weather: { temp: 18, icon: '💨', desc: 'Windy & Cool', rain: 40 },
+                characteristics: {
+                    'Power': 70,
+                    'Downforce': 85,
+                    'Braking': 75,
+                    'Tires': 90,
+                    'Overtaking': 50
+                },
+                teamSuitability: {
+                    'Red Bull': 0.97, 'McLaren': 0.88, 'Ferrari': 0.83, 'Mercedes': 0.81,
+                    'Aston Martin': 0.66, 'Alpine': 0.61, 'Williams': 0.57, 'RB': 0.59,
+                    'Haas': 0.54, 'Kick Sauber': 0.51
+                }
+            },
+            'italy': {
+                name: 'Italian Grand Prix',
+                location: 'Autodromo Nazionale Monza',
+                flag: '🇮🇹',
+                length: '5.793km',
+                laps: 53,
+                type: 'Permanent',
+                weather: { temp: 26, icon: '☀️', desc: 'Warm & Sunny', rain: 15 },
+                characteristics: {
+                    'Power': 95,
+                    'Downforce': 40,
+                    'Braking': 85,
+                    'Tires': 70,
+                    'Overtaking': 90
+                },
+                teamSuitability: {
+                    'Ferrari': 0.94, 'Red Bull': 0.90, 'McLaren': 0.87, 'Mercedes': 0.84,
+                    'Aston Martin': 0.65, 'Alpine': 0.62, 'Williams': 0.59, 'RB': 0.61,
+                    'Haas': 0.57, 'Kick Sauber': 0.54
+                }
+            },
+            'azerbaijan': {
+                name: 'Azerbaijan Grand Prix',
+                location: 'Baku City Circuit',
+                flag: '🇦🇿',
+                length: '6.003km',
+                laps: 51,
+                type: 'Street',
+                weather: { temp: 24, icon: '💨', desc: 'Windy City Circuit', rain: 10 },
+                characteristics: {
+                    'Power': 90,
+                    'Downforce': 50,
+                    'Braking': 95,
+                    'Tires': 75,
+                    'Overtaking': 85
+                },
+                teamSuitability: {
+                    'Red Bull': 0.89, 'Ferrari': 0.87, 'McLaren': 0.85, 'Mercedes': 0.83,
+                    'Aston Martin': 0.64, 'Alpine': 0.60, 'Williams': 0.58, 'RB': 0.62,
+                    'Haas': 0.56, 'Kick Sauber': 0.54
+                }
+            },
+            'singapore': {
+                name: 'Singapore Grand Prix',
+                location: 'Marina Bay Street Circuit',
+                flag: '🇸🇬',
+                length: '5.063km',
+                laps: 61,
+                type: 'Street',
+                weather: { temp: 31, icon: '🌙', desc: 'Hot & Humid Night Race', rain: 35 },
+                characteristics: {
+                    'Power': 65,
+                    'Downforce': 85,
+                    'Braking': 80,
+                    'Tires': 95,
+                    'Overtaking': 55
+                },
+                teamSuitability: {
+                    'Red Bull': 0.91, 'Ferrari': 0.88, 'McLaren': 0.86, 'Mercedes': 0.83,
+                    'Aston Martin': 0.69, 'Alpine': 0.64, 'Williams': 0.60, 'RB': 0.58,
+                    'Haas': 0.55, 'Kick Sauber': 0.52
+                }
+            },
+            'usa': {
+                name: 'United States Grand Prix',
+                location: 'Circuit of the Americas',
+                flag: '🇺🇸',
+                length: '5.513km',
+                laps: 56,
+                type: 'Permanent',
+                weather: { temp: 25, icon: '⛅', desc: 'Mild Texas Weather', rain: 25 },
+                characteristics: {
+                    'Power': 80,
+                    'Downforce': 75,
+                    'Braking': 80,
+                    'Tires': 85,
+                    'Overtaking': 75
+                },
+                teamSuitability: {
+                    'Red Bull': 0.91, 'McLaren': 0.88, 'Ferrari': 0.85, 'Mercedes': 0.82,
+                    'Aston Martin': 0.67, 'Alpine': 0.63, 'Williams': 0.59, 'RB': 0.57,
+                    'Haas': 0.56, 'Kick Sauber': 0.53
+                }
+            },
+            'mexico': {
+                name: 'Mexico City Grand Prix',
+                location: 'Autódromo Hermanos Rodríguez',
+                flag: '🇲🇽',
+                length: '4.304km',
+                laps: 71,
+                type: 'Permanent',
+                weather: { temp: 22, icon: '☀️', desc: 'High Altitude • Thin Air', rain: 20 },
+                characteristics: {
+                    'Power': 90,
+                    'Downforce': 65,
+                    'Braking': 75,
+                    'Tires': 80,
+                    'Overtaking': 80
+                },
+                teamSuitability: {
+                    'Red Bull': 0.92, 'Ferrari': 0.87, 'McLaren': 0.85, 'Mercedes': 0.82,
+                    'Aston Martin': 0.66, 'Alpine': 0.62, 'Williams': 0.58, 'RB': 0.60,
+                    'Haas': 0.55, 'Kick Sauber': 0.52
+                }
+            },
+            'brazil': {
+                name: 'São Paulo Grand Prix',
+                location: 'Autódromo José Carlos Pace',
+                flag: '🇧🇷',
+                length: '4.309km',
+                laps: 71,
+                type: 'Permanent',
+                weather: { temp: 24, icon: '🌦️', desc: 'Unpredictable Weather', rain: 55 },
+                characteristics: {
+                    'Power': 85,
+                    'Downforce': 70,
+                    'Braking': 80,
+                    'Tires': 85,
+                    'Overtaking': 75
+                },
+                teamSuitability: {
+                    'McLaren': 0.90, 'Red Bull': 0.88, 'Ferrari': 0.86, 'Mercedes': 0.84,
+                    'Aston Martin': 0.68, 'Alpine': 0.65, 'Williams': 0.61, 'RB': 0.59,
+                    'Haas': 0.57, 'Kick Sauber': 0.55
+                }
+            },
+            'las-vegas': {
+                name: 'Las Vegas Grand Prix',
+                location: 'Las Vegas Strip Circuit',
+                flag: '🇺🇸',
+                length: '6.201km',
+                laps: 50,
+                type: 'Street',
+                weather: { temp: 15, icon: '🌙', desc: 'Cold Desert Night', rain: 5 },
+                characteristics: {
+                    'Power': 95,
+                    'Downforce': 45,
+                    'Braking': 90,
+                    'Tires': 70,
+                    'Overtaking': 85
+                },
+                teamSuitability: {
+                    'Red Bull': 0.90, 'Ferrari': 0.88, 'McLaren': 0.86, 'Mercedes': 0.84,
+                    'Aston Martin': 0.63, 'Alpine': 0.59, 'Williams': 0.57, 'RB': 0.61,
+                    'Haas': 0.58, 'Kick Sauber': 0.55
+                }
+            },
+            'qatar': {
+                name: 'Qatar Grand Prix',
+                location: 'Lusail International Circuit',
+                flag: '🇶🇦',
+                length: '5.380km',
+                laps: 57,
+                type: 'Permanent',
+                weather: { temp: 30, icon: '🌞', desc: 'Hot Desert • Sprint Weekend', rain: 0 },
+                characteristics: {
+                    'Power': 85,
+                    'Downforce': 70,
+                    'Braking': 80,
+                    'Tires': 90,
+                    'Overtaking': 70
+                },
+                teamSuitability: {
+                    'Red Bull': 0.93, 'McLaren': 0.87, 'Ferrari': 0.84, 'Mercedes': 0.81,
+                    'Aston Martin': 0.66, 'Alpine': 0.61, 'Williams': 0.57, 'RB': 0.59,
+                    'Haas': 0.54, 'Kick Sauber': 0.51
+                }
+            },
+            'abu-dhabi': {
+                name: 'Abu Dhabi Grand Prix',
+                location: 'Yas Marina Circuit',
+                flag: '🇦🇪',
+                length: '5.281km',
+                laps: 58,
+                type: 'Permanent',
+                weather: { temp: 27, icon: '🌅', desc: 'Twilight Race • Dry', rain: 5 },
+                characteristics: {
+                    'Power': 80,
+                    'Downforce': 75,
+                    'Braking': 85,
+                    'Tires': 80,
+                    'Overtaking': 65
+                },
+                teamSuitability: {
+                    'Red Bull': 0.91, 'McLaren': 0.88, 'Ferrari': 0.85, 'Mercedes': 0.83,
+                    'Aston Martin': 0.68, 'Alpine': 0.63, 'Williams': 0.59, 'RB': 0.57,
+                    'Haas': 0.55, 'Kick Sauber': 0.52
+                }
+            }
+        };
+
+        // Driver data with base performance and qualifying skills
+        const drivers = {
+            'VER': { name: 'Max Verstappen', team: 'Red Bull', basePace: 93.191, baseConfidence: 92, qualiSkill: 0.95, consistency: 0.92 },
+            'NOR': { name: 'Lando Norris', team: 'McLaren', basePace: 93.429, baseConfidence: 88, qualiSkill: 0.90, consistency: 0.85 },
+            'PIA': { name: 'Oscar Piastri', team: 'McLaren', basePace: 93.232, baseConfidence: 85, qualiSkill: 0.88, consistency: 0.87 },
+            'LEC': { name: 'Charles Leclerc', team: 'Ferrari', basePace: 93.419, baseConfidence: 87, qualiSkill: 0.93, consistency: 0.82 },
+            'SAI': { name: 'Carlos Sainz', team: 'Ferrari', basePace: 94.497, baseConfidence: 82, qualiSkill: 0.85, consistency: 0.88 },
+            'RUS': { name: 'George Russell', team: 'Mercedes', basePace: 93.833, baseConfidence: 84, qualiSkill: 0.89, consistency: 0.90 },
+            'HAM': { name: 'Lewis Hamilton', team: 'Mercedes', basePace: 94.021, baseConfidence: 86, qualiSkill: 0.91, consistency: 0.86 },
+            'ALO': { name: 'Fernando Alonso', team: 'Aston Martin', basePace: 94.784, baseConfidence: 79, qualiSkill: 0.87, consistency: 0.91 },
+            'STR': { name: 'Lance Stroll', team: 'Aston Martin', basePace: 95.318, baseConfidence: 72, qualiSkill: 0.75, consistency: 0.78 },
+            'GAS': { name: 'Pierre Gasly', team: 'Alpine', basePace: 95.682, baseConfidence: 75, qualiSkill: 0.82, consistency: 0.84 },
+            'OCO': { name: 'Esteban Ocon', team: 'Alpine', basePace: 95.891, baseConfidence: 73, qualiSkill: 0.80, consistency: 0.85 },
+            'TSU': { name: 'Yuki Tsunoda', team: 'RB', basePace: 95.445, baseConfidence: 71, qualiSkill: 0.83, consistency: 0.79 },
+            'RIC': { name: 'Daniel Ricciardo', team: 'RB', basePace: 95.678, baseConfidence: 74, qualiSkill: 0.86, consistency: 0.82 },
+            'HUL': { name: 'Nico Hulkenberg', team: 'Haas', basePace: 95.345, baseConfidence: 76, qualiSkill: 0.84, consistency: 0.89 },
+            'MAG': { name: 'Kevin Magnussen', team: 'Haas', basePace: 95.567, baseConfidence: 73, qualiSkill: 0.78, consistency: 0.81 },
+            'ALB': { name: 'Alexander Albon', team: 'Williams', basePace: 95.789, baseConfidence: 70, qualiSkill: 0.81, consistency: 0.86 },
+            'SAR': { name: 'Logan Sargeant', team: 'Williams', basePace: 96.123, baseConfidence: 68, qualiSkill: 0.72, consistency: 0.75 },
+            'BOT': { name: 'Valtteri Bottas', team: 'Kick Sauber', basePace: 96.234, baseConfidence: 69, qualiSkill: 0.88, consistency: 0.90 },
+            'ZHO': { name: 'Zhou Guanyu', team: 'Kick Sauber', basePace: 96.456, baseConfidence: 67, qualiSkill: 0.76, consistency: 0.83 }
+        };
+
+        // Simulate qualifying session
+        function simulateQualifying(track) {
+            let qualiResults = [];
+            
+            for (const [driverCode, driverData] of Object.entries(drivers)) {
+                // Base qualifying time (faster than race pace)
+                let qualiTime = driverData.basePace - 1.2; // Qualifying typically 1-2s faster
+                
+                // Track suitability for team
+                const trackSuitability = track.teamSuitability[driverData.team] || 0.5;
+                qualiTime -= (trackSuitability - 0.5) * 0.8; // Better suited teams go faster
+                
+                // Driver qualifying skill
+                qualiTime -= (driverData.qualiSkill - 0.8) * 1.0; // Skill affects lap time
+                
+                // Consistency factor (some drivers more variable in quali)
+                const variability = (1 - driverData.consistency) * 0.6;
+                qualiTime += (Math.random() - 0.5) * variability;
+                
+                // Track-specific advantages
+                if (track.type === 'Street' && driverCode === 'LEC') qualiTime -= 0.15; // Leclerc loves street circuits
+                if (track.characteristics.Power > 85 && driverData.team === 'Ferrari') qualiTime -= 0.1; // Ferrari good on power tracks
+                if (driverCode === 'VER' && track.name.includes('Red Bull Ring')) qualiTime -= 0.2; // Home advantage
+                if (driverCode === 'RUS' && track.characteristics.Downforce > 80) qualiTime -= 0.05; // Russell good in high downforce
+                if (driverCode === 'BOT' && track.weather.rain > 30) qualiTime -= 0.1; // Bottas good in tricky conditions
+                
+                // Weather effects on qualifying
+                if (track.weather.rain > 40) {
+                    // Rain specialists get advantage
+                    const rainMasters = ['VER', 'HAM', 'ALO', 'GAS'];
+                    if (rainMasters.includes(driverCode)) {
+                        qualiTime -= 0.3;
+                    } else {
+                        qualiTime += Math.random() * 0.4; // Others struggle more
+                    }
+                }
+                
+                // Temperature effects
+                if (track.weather.temp > 30) {
+                    // Hot weather affects some teams more
+                    if (driverData.team === 'Mercedes') qualiTime += 0.05; // Mercedes struggles in heat
+                    if (driverData.team === 'Ferrari') qualiTime -= 0.03; // Ferrari better in heat
+                }
+                
+                qualiResults.push({
+                    driver: driverCode,
+                    time: qualiTime,
+                    team: driverData.team
+                });
+            }
+            
+            // Sort by qualifying time
+            qualiResults.sort((a, b) => a.time - b.time);
+            
+            // Return position mapping
+            const qualiPositions = {};
+            qualiResults.forEach((result, index) => {
+                qualiPositions[result.driver] = index + 1;
+            });
+            
+            return qualiPositions;
+        }
+
+        // Feature weights
+        let featureWeights = {
+            track: 0.85,
+            pace: 0.90,
+            quali: 0.85,
+            team: 0.68,
+            weather: 0.45
+        };
+
+        // Default weights for reset
+        const defaultWeights = {
+            track: 0.85,
+            pace: 0.90,
+            quali: 0.85,
+            team: 0.68,
+            weather: 0.45
+        };
+
+        // Global variables for qualifying
+        let currentQualiGrid = {};
+        let editModeActive = false;
+        let originalQualiGrid = {};
+
+        // Initialize the application
+        function initializeApp() {
+            populateTrackGrid();
+            selectTrack('austria');
+            setupSliders();
+            updatePredictions();
+        }
+
+        // Populate track selection grid
+        function populateTrackGrid() {
+            const trackGrid = document.getElementById('track-grid');
+            trackGrid.innerHTML = '';
+
+            for (const [key, track] of Object.entries(f1Tracks)) {
+                const trackOption = document.createElement('div');
+                trackOption.className = 'track-option';
+                trackOption.setAttribute('data-track', key);
+                trackOption.onclick = () => selectTrack(key);
+
+                trackOption.innerHTML = `
+                    <span class="track-flag">${track.flag}</span>
+                    <div class="track-name">${track.name.split(' Grand Prix')[0]}</div>
+                    <div class="track-details">${track.length} • ${track.laps} laps</div>
+                `;
+
+                trackGrid.appendChild(trackOption);
+            }
+        }
+
+        // Select a track
+        function selectTrack(trackKey) {
+            try {
+                currentTrack = trackKey;
+                const track = f1Tracks[trackKey];
+
+                if (!track) {
+                    console.error(`Track ${trackKey} not found`);
+                    return;
+                }
+
+                // Clear current qualifying grid to force regeneration
+                currentQualiGrid = {};
+
+                // Update active state
+                document.querySelectorAll('.track-option').forEach(option => {
+                    option.classList.remove('active');
+                });
+                
+                const trackElement = document.querySelector(`[data-track="${trackKey}"]`);
+                if (trackElement) {
+                    trackElement.classList.add('active');
+                }
+
+                // Update header information
+                document.getElementById('current-race-name').textContent = track.name;
+                document.getElementById('current-track-info').textContent = `${track.location} • ${track.type} Circuit`;
+
+                // Update weather information
+                document.getElementById('weather-icon').textContent = track.weather.icon;
+                document.getElementById('weather-temp').textContent = `${track.weather.temp}°C`;
+                document.getElementById('weather-desc').textContent = track.weather.desc;
+                document.getElementById('rain-chance').textContent = `${track.weather.rain}%`;
+
+                // Update track characteristics
+                updateTrackCharacteristics(track);
+
+                // Update predictions for new track
+                updatePredictions();
+            } catch (error) {
+                console.error('Error selecting track:', error);
+                console.log('Track key:', trackKey);
+                console.log('Available tracks:', Object.keys(f1Tracks));
+            }
+        }
+
+        // Update track characteristics display
+        function updateTrackCharacteristics(track) {
+            const characteristicsContainer = document.getElementById('track-characteristics');
+            characteristicsContainer.innerHTML = '';
+
+            for (const [characteristic, value] of Object.entries(track.characteristics)) {
+                const charDiv = document.createElement('div');
+                charDiv.className = 'characteristic';
+                charDiv.innerHTML = `
+                    <div class="characteristic-label">${characteristic}</div>
+                    <div class="characteristic-value">${value}%</div>
+                `;
+                characteristicsContainer.appendChild(charDiv);
+            }
+        }
+
+        // Setup sliders
+        function setupSliders() {
+            const sliders = [
+                { id: 'track-slider', valueId: 'track-value', key: 'track' },
+                { id: 'pace-slider', valueId: 'pace-value', key: 'pace' },
+                { id: 'quali-slider', valueId: 'quali-value', key: 'quali' },
+                { id: 'team-slider', valueId: 'team-value', key: 'team' },
+                { id: 'weather-slider', valueId: 'weather-value', key: 'weather' }
+            ];
+
+            sliders.forEach(slider => {
+                const element = document.getElementById(slider.id);
+                element.addEventListener('input', function(e) {
+                    document.getElementById(slider.valueId).textContent = e.target.value + '%';
+                    featureWeights[slider.key] = e.target.value / 100;
+                });
+            });
+        }
+
+        // Reset weights to default
+        function resetWeights() {
+            featureWeights = {
+                track: defaultWeights.track,
+                pace: defaultWeights.pace,
+                quali: defaultWeights.quali,
+                team: defaultWeights.team,
+                weather: defaultWeights.weather
+            };
+            
+            document.getElementById('track-slider').value = defaultWeights.track * 100;
+            document.getElementById('pace-slider').value = defaultWeights.pace * 100;
+            document.getElementById('quali-slider').value = defaultWeights.quali * 100;
+            document.getElementById('team-slider').value = defaultWeights.team * 100;
+            document.getElementById('weather-slider').value = defaultWeights.weather * 100;
+            
+            document.getElementById('track-value').textContent = Math.round(defaultWeights.track * 100) + '%';
+            document.getElementById('pace-value').textContent = Math.round(defaultWeights.pace * 100) + '%';
+            document.getElementById('quali-value').textContent = Math.round(defaultWeights.quali * 100) + '%';
+            document.getElementById('team-value').textContent = Math.round(defaultWeights.team * 100) + '%';
+            document.getElementById('weather-value').textContent = Math.round(defaultWeights.weather * 100) + '%';
+            
+            updatePredictions();
+        }
+
+        // Update predictions based on track and weights
+        function updatePredictions() {
+            try {
+                const track = f1Tracks[currentTrack];
+                
+                if (!track) {
+                    console.error(`Track not found: ${currentTrack}`);
+                    return;
+                }
+                
+                // Use current qualifying grid or simulate new one
+                if (!currentQualiGrid || Object.keys(currentQualiGrid).length === 0) {
+                    currentQualiGrid = simulateQualifying(track);
+                }
+                
+                let updatedPredictions = {};
+                
+                for (const [driverCode, driverData] of Object.entries(drivers)) {
+                    let adjustment = 0;
+                    
+                    // Track suitability adjustment
+                    const trackSuitability = track.teamSuitability[driverData.team] || 0.5;
+                    adjustment += (1 - featureWeights.track) * (1 - trackSuitability) * 3;
+                    
+                    // Pace weight affects base time
+                    adjustment += (1 - featureWeights.pace) * 2;
+                    
+                    // QUALIFYING POSITION EFFECT - Much stronger impact
+                    const qualiPos = currentQualiGrid[driverCode];
+                    
+                    if (!qualiPos) {
+                        console.error(`Qualifying position not found for ${driverCode}`);
+                        continue;
+                    }
+                    
+                    // Base qualifying effect - each position costs more time
+                    let qualiEffect = (qualiPos - 1) * 0.15; // Increased from 0.08 to 0.15
+                    
+                    // Track-specific qualifying importance
+                    const overtakingDifficulty = (100 - (track.characteristics.Overtaking || 50)) / 100;
+                    let qualiImportanceMultiplier = 1 + (overtakingDifficulty * 2); // Up to 3x multiplier for hard-to-overtake tracks
+                    
+                    // Street circuits and Monaco-type tracks make quali even more important
+                    if (track.type === 'Street' || (track.characteristics.Overtaking || 50) < 40) {
+                        qualiImportanceMultiplier *= 1.5; // Extra penalty for starting back on street circuits
+                    }
+                    
+                    qualiEffect *= qualiImportanceMultiplier;
+                    
+                    // Apply qualifying weight
+                    adjustment += (featureWeights.quali) * qualiEffect;
+                    
+                    // Additional qualifying-based adjustments
+                    if (qualiPos === 1) {
+                        // Pole position advantage - clean air, good strategy options
+                        adjustment -= 0.2;
+                    } else if (qualiPos <= 3) {
+                        // Front row/second row advantage
+                        adjustment -= 0.1;
+                    } else if (qualiPos <= 10) {
+                        // Q3 advantage - good starting position
+                        adjustment += 0.05;
+                    } else if (qualiPos > 15) {
+                        // Back of grid penalty - traffic, worse strategy
+                        adjustment += 0.3 + ((qualiPos - 15) * 0.1);
+                    }
+                    
+                    // Dirty air effect for cars starting in midfield
+                    if (qualiPos >= 6 && qualiPos <= 14) {
+                        adjustment += 0.15; // Stuck in DRS trains and dirty air
+                    }
+                    
+                    // Safety car and strategy effects based on grid position
+                    if (qualiPos > 10) {
+                        // Cars starting outside top 10 have less strategic flexibility
+                        adjustment += 0.1;
+                        
+                        // But they might benefit from alternative strategies
+                        if (Math.random() < 0.3) { // 30% chance
+                            adjustment -= 0.2; // Alternative strategy pays off
+                        }
+                    }
+                    
+                    // Team performance adjustment
+                    const teamStrength = {
+                        'Red Bull': 0.95, 'McLaren': 0.90, 'Ferrari': 0.85, 'Mercedes': 0.80,
+                        'Aston Martin': 0.65, 'Alpine': 0.60, 'RB': 0.55, 'Williams': 0.50,
+                        'Haas': 0.48, 'Kick Sauber': 0.45
+                    };
+                    adjustment += (1 - featureWeights.team) * (1 - (teamStrength[driverData.team] || 0.5)) * 2;
+                    
+                    // Weather effects
+                    const weatherSensitivity = Math.random() * 0.5;
+                    const rainChance = track.weather.rain || 0;
+                    adjustment += (1 - featureWeights.weather) * (rainChance / 100) * weatherSensitivity;
+                    
+                    // Driver-specific qualifying recovery ability
+                    const overtakingMasters = {
+                        'VER': 0.9,  // Excellent at overtaking
+                        'HAM': 0.85, // Great wheel-to-wheel
+                        'ALO': 0.88, // Master of racecraft
+                        'LEC': 0.75, // Good but sometimes struggles
+                        'NOR': 0.70, // Improving
+                        'RUS': 0.65, // Methodical
+                        'PIA': 0.68  // Learning fast
+                    };
+                    
+                    const overtakingSkill = overtakingMasters[driverCode] || 0.5;
+                    
+                    // Good overtakers can recover better from poor quali
+                    if (qualiPos > 5) {
+                        const recoveryBonus = (overtakingSkill - 0.5) * 0.3;
+                        adjustment -= recoveryBonus;
+                    }
+                    
+                    // Track-specific adjustments
+                    const overtakingDiff = track.characteristics.Overtaking || 50;
+                    if (overtakingDiff < 50 && qualiPos > 10) {
+                        adjustment += 0.8; // Very hard to overtake = grid position extremely important
+                    }
+                    if ((track.characteristics.Tires || 50) > 85) {
+                        // Tire management becomes crucial
+                        if (['ALO', 'HAM', 'VER'].includes(driverCode)) adjustment -= 0.2;
+                    }
+                    
+                    const trackLength = parseFloat(track.length) || 5.0;
+                    if (trackLength > 6.0) {
+                        // Long tracks favor consistency and more overtaking opportunities
+                        adjustment -= (driverData.consistency - 0.8) * 0.3;
+                        if (qualiPos > 8) adjustment -= 0.1; // More chances to overtake
+                    }
+                    
+                    // Calculate confidence based on grid position and track characteristics
+                    let confidence = driverData.baseConfidence + (trackSuitability - 0.7) * 20;
+                    
+                    // Grid position affects confidence
+                    if (qualiPos <= 3) {
+                        confidence += 15; // Front row boost
+                    } else if (qualiPos <= 6) {
+                        confidence += 5;  // Good starting position
+                    } else if (qualiPos <= 10) {
+                        confidence -= 5;  // Midfield battle
+                    } else {
+                        confidence -= 15 - (overtakingSkill * 10); // Back of grid, but overtakers less worried
+                    }
+                    
+                    // Track overtaking difficulty affects confidence
+                    confidence -= (100 - overtakingDiff) * 0.2;
+                    
+                    updatedPredictions[driverCode] = {
+                        ...driverData,
+                        adjustedTime: driverData.basePace + adjustment,
+                        confidence: Math.max(45, Math.min(98, confidence)),
+                        trackSuitability: trackSuitability,
+                        qualiPos: qualiPos,
+                        qualiTime: (driverData.basePace - 1.2 - (trackSuitability - 0.5) * 0.8).toFixed(3),
+                        overtakingSkill: overtakingSkill
+                    };
+                }
+                
+                // Sort by adjusted time
+                const sorted = Object.entries(updatedPredictions)
+                    .sort((a, b) => a[1].adjustedTime - b[1].adjustedTime);
+                
+                // Update displays
+                updatePodium(sorted.slice(0, 3));
+                updateResultsTable(sorted);
+                updateFeatureBars();
+                updateModelMetrics(track);
+                displayQualifyingGrid(currentQualiGrid);
+                
+            } catch (error) {
+                console.error('Error in updatePredictions:', error);
+                console.log('Current track:', currentTrack);
+                console.log('Current qualifying grid:', currentQualiGrid);
+            }
+        }
+
+        // Update podium display
+        function updatePodium(topThree) {
+            const positions = ['position-2', 'position-1', 'position-3']; // 2nd, 1st, 3rd
+            const podiumOrder = [topThree[1], topThree[0], topThree[2]]; // Reorder for display
+            
+            positions.forEach((posClass, index) => {
+                const driver = podiumOrder[index];
+                if (driver) {
+                    const element = document.querySelector(`.${posClass}`);
+                    element.querySelector('.driver-name').textContent = driver[0];
+                    element.querySelector('.team-name').textContent = driver[1].team;
+                    element.querySelector('.prediction-confidence').textContent = 
+                        `${driver[1].confidence.toFixed(1)}% confidence`;
+                    element.querySelector('.confidence-fill').style.width = 
+                        `${driver[1].confidence}%`;
+                }
+            });
+        }
+
+        // Update full race results table (All 20 drivers)
+        function updateResultsTable(sorted) {
+            const tbody = document.getElementById('results-tbody');
+            tbody.innerHTML = '';
+            
+            const track = f1Tracks[currentTrack];
+            
+            // Realistic lap times for each track (in seconds)
+            const trackLapTimes = {
+                'monaco': 74.5, 'austria': 66.2, 'australia': 81.3, 'bahrain': 87.9,
+                'saudi': 89.5, 'japan': 91.8, 'china': 85.4, 'miami': 88.7,
+                'emilia-romagna': 76.8, 'canada': 73.2, 'spain': 78.9, 'britain': 88.4,
+                'hungary': 77.8, 'belgium': 106.8, 'netherlands': 72.1, 'italy': 81.7,
+                'azerbaijan': 103.2, 'singapore': 98.6, 'usa': 95.7, 'mexico': 75.9,
+                'brazil': 70.5, 'las-vegas': 96.3, 'qatar': 84.1, 'abu-dhabi': 86.2
+            };
+            
+            const baseLapTime = trackLapTimes[currentTrack] || 85.0;
+            const totalLaps = track.laps;
+            
+            // Calculate realistic base race time (winner's time)
+            const baseRaceTime = baseLapTime * totalLaps;
+            
+            // Calculate realistic race times and gaps
+            let winnerTime = null;
+            let raceResults = [];
+            
+            sorted.forEach((entry, index) => {
+                const [driverCode, data] = entry;
+                const position = index + 1;
+                
+                // Much smaller realistic gaps between cars
+                let timeGap = 0;
+                
+                // RACE CHAOS AND OVERTAKES - Make F1 unpredictable!
+                let racePosition = position;
+                
+                // Strategy variations can shake up the order
+                const strategyLuck = Math.random();
+                if (strategyLuck < 0.15) { // 15% chance of great strategy
+                    racePosition = Math.max(1, racePosition - Math.floor(Math.random() * 4 + 1)); // Gain 1-4 positions
+                } else if (strategyLuck > 0.85) { // 15% chance of bad strategy
+                    racePosition = Math.min(20, racePosition + Math.floor(Math.random() * 3 + 1)); // Lose 1-3 positions
+                }
+                
+                // OVERTAKING CHAOS based on driver skill and track
+                const overtakingChance = (track.characteristics.Overtaking || 50) / 100;
+                const driverOvertakingSkill = {
+                    'VER': 0.95, 'HAM': 0.90, 'ALO': 0.88, 'LEC': 0.82, 'NOR': 0.78,
+                    'RUS': 0.75, 'PIA': 0.73, 'SAI': 0.70, 'GAS': 0.72, 'ALB': 0.68,
+                    'OCO': 0.65, 'TSU': 0.70, 'HUL': 0.75, 'BOT': 0.78, 'RIC': 0.80,
+                    'STR': 0.55, 'MAG': 0.62, 'SAR': 0.45, 'ZHO': 0.58
+                }[driverCode] || 0.6;
+                
+                // RACE INCIDENTS AND DRAMA
+                const incidentRoll = Math.random();
+                
+                if (incidentRoll < 0.08) { // 8% chance of major incident
+                    // Collision, spin, or major mistake
+                    racePosition += Math.floor(Math.random() * 8 + 3); // Drop 3-10 positions
+                    racePosition = Math.min(20, racePosition);
+                } else if (incidentRoll < 0.20) { // 12% chance of minor incident
+                    // Lock up, track limits, small mistake
+                    racePosition += Math.floor(Math.random() * 3 + 1); // Drop 1-3 positions
+                    racePosition = Math.min(20, racePosition);
+                } else if (incidentRoll > 0.88 && driverOvertakingSkill > 0.7) {
+                    // Brilliant overtaking move for skilled drivers
+                    racePosition = Math.max(1, racePosition - Math.floor(Math.random() * 3 + 1)); // Gain 1-3 positions
+                }
+                
+                // SAFETY CAR LOTTERY - Completely shuffles order
+                if (Math.random() < 0.25) { // 25% chance of safety car affecting this driver
+                    const scLuck = Math.random();
+                    if (scLuck < 0.4) { // 40% gain positions (good pit timing)
+                        racePosition = Math.max(1, racePosition - Math.floor(Math.random() * 5 + 1)); // Gain 1-5 positions
+                    } else if (scLuck > 0.7) { // 30% lose positions (bad timing)
+                        racePosition = Math.min(20, racePosition + Math.floor(Math.random() * 4 + 1)); // Lose 1-4 positions
+                    }
+                }
+                
+                // DRS BATTLES - More action on DRS tracks
+                if ((track.characteristics.Overtaking || 50) > 70) {
+                    const drsBattle = Math.random();
+                    if (drsBattle < 0.3) { // 30% chance of DRS battle
+                        const positionSwing = Math.floor(Math.random() * 3) + 1; // ±1-3 positions
+                        if (Math.random() < 0.5) {
+                            racePosition = Math.max(1, racePosition - positionSwing);
+                        } else {
+                            racePosition = Math.min(20, racePosition + positionSwing);
+                        }
+                    }
+                }
+                
+                // TIRE STRATEGY BATTLES
+                const tireStrategy = Math.random();
+                if (tireStrategy < 0.18) { // 18% chance of tire strategy affecting position
+                    if (Math.random() < 0.6) { // Good tire strategy
+                        racePosition = Math.max(1, racePosition - Math.floor(Math.random() * 4 + 1));
+                    } else { // Bad tire degradation
+                        racePosition = Math.min(20, racePosition + Math.floor(Math.random() * 3 + 1));
+                    }
+                }
+                
+                // RAIN CHAOS - Weather can completely change everything
+                if (track.weather.rain > 30) {
+                    const rainMasters = ['VER', 'HAM', 'ALO', 'RUS', 'GAS', 'BOT'];
+                    const rainRoll = Math.random();
+                    
+                    if (rainRoll < 0.35) { // 35% chance rain affects this driver
+                        if (rainMasters.includes(driverCode)) {
+                            // Rain masters gain positions
+                            racePosition = Math.max(1, racePosition - Math.floor(Math.random() * 6 + 2)); // Gain 2-7 positions!
+                        } else {
+                            // Others struggle in rain
+                            racePosition = Math.min(20, racePosition + Math.floor(Math.random() * 5 + 1)); // Lose 1-5 positions
+                        }
+                    }
+                }
+                
+                // TRACK-SPECIFIC CHAOS
+                if (currentTrack === 'monaco' && Math.random() < 0.4) {
+                    // Monaco chaos - crashes, barriers
+                    racePosition += Math.floor(Math.random() * 4);
+                } else if (currentTrack === 'baku' && Math.random() < 0.3) {
+                    // Baku madness
+                    const chaosLevel = Math.floor(Math.random() * 8) - 3; // ±3-4 positions
+                    racePosition = Math.max(1, Math.min(20, racePosition + chaosLevel));
+                }
+                
+                // Final position bounds check
+                racePosition = Math.max(1, Math.min(20, racePosition));
+                
+                if (racePosition === 1) {
+                    timeGap = 0; // Winner = 0 gap
+                } else {
+                    // Realistic F1 gaps based on FINAL race position (after all the chaos!)
+                    if (racePosition <= 3) {
+                        timeGap = Math.random() * 12 + 0.5; // 0.5-12.5 seconds for podium
+                    } else if (racePosition <= 6) {
+                        timeGap = 8 + Math.random() * 15; // 8-23 seconds for top 6
+                    } else if (racePosition <= 10) {
+                        timeGap = 20 + Math.random() * 25; // 20-45 seconds for points
+                    } else if (racePosition <= 15) {
+                        timeGap = 40 + Math.random() * 35; // 40-75 seconds for midfield
+                    } else {
+                        timeGap = 60 + Math.random() * 45; // 60-105 seconds for back markers
+                    }
+                }
+                
+                const raceTime = winnerTime + timeGap;
+                
+                // DNF probability - much lower for realism
+                let dnfRisk = 0.03; // 3% base rate
+                if (data.team === 'Alpine' || data.team === 'Kick Sauber') dnfRisk += 0.02;
+                if (data.team === 'Haas') dnfRisk += 0.01;
+                if (position > 15) dnfRisk += 0.01;
+                
+                const isDNF = Math.random() < dnfRisk;
+                
+                // Store winner's time
+                if (position === 1 && !isDNF) {
+                    winnerTime = baseRaceTime + (Math.random() - 0.5) * 10; // ±5 sec variation
+                }
+                
+                raceResults.push({
+                    originalPosition: position,
+                    finalPosition: racePosition,
+                    driverCode,
+                    data,
+                    raceTime: isDNF ? null : raceTime,
+                    timeGap: isDNF ? null : timeGap,
+                    isDNF
+                });
+            });
+            
+            
+            // Sort results by FINAL race position after all the chaos
+            raceResults.sort((a, b) => {
+                if (a.isDNF && !b.isDNF) return 1;
+                if (!a.isDNF && b.isDNF) return -1;
+                if (a.isDNF && b.isDNF) return a.originalPosition - b.originalPosition;
+                return a.finalPosition - b.finalPosition; // Sort by chaotic final position!
+            });
+            
+            // Assign final finishing positions with realistic time gaps
+            let finishPosition = 1;
+            
+            raceResults.forEach((result, index) => {
+                if (!result.isDNF) {
+                    result.finishPosition = finishPosition++;
+                    
+                    // Use the pre-calculated chaotic time gaps
+                    if (result.finishPosition === 1) {
+                        result.timeGap = 0;
+                    }
+                    // timeGap already calculated with chaos above
+                } else {
+                    result.finishPosition = 'DNF';
+                }
+            });
+            
+            // Process results and determine lapped status
+            raceResults.forEach((result, index) => {
+                const { driverCode, data, raceTime, isDNF, finishPosition } = result;
+                const row = document.createElement('tr');
+                
+                const posClass = finishPosition === 1 ? 'gold' : finishPosition === 2 ? 'silver' : finishPosition === 3 ? 'bronze' : '';
+                
+                // Calculate position change from grid
+                const finalPos = isDNF ? 20 : finishPosition; // DNF counted as last
+                const positionChange = data.qualiPos - finalPos;
+                const changeText = positionChange > 0 ? `+${positionChange}` : 
+                                 positionChange < 0 ? `${positionChange}` : '0';
+                const changeClass = positionChange > 0 ? 'color: var(--accent-green)' : 
+                                  positionChange < 0 ? 'color: var(--f1-red)' : 
+                                  'color: var(--text-secondary)';
+                
+                let timeDisplay, statusDisplay;
+                
+                if (isDNF) {
+                    // Random DNF reasons
+                    const dnfReasons = ['Engine', 'Gearbox', 'Suspension', 'Collision', 'Hydraulics', 'Electrical', 'Brake failure'];
+                    const reason = dnfReasons[Math.floor(Math.random() * dnfReasons.length)];
+                    const dnfLap = Math.floor(Math.random() * (totalLaps - 15)) + 10; // DNF between lap 10 and race end-15
+                    
+                    timeDisplay = `DNF`;
+                    statusDisplay = `${reason} (Lap ${dnfLap})`;
+                } else if (finishPosition === 1) {
+                    // Winner shows total race time in proper F1 format
+                    const hours = Math.floor(winnerTime / 3600);
+                    const minutes = Math.floor((winnerTime % 3600) / 60);
+                    const seconds = (winnerTime % 60);
+                    timeDisplay = `${hours}:${String(minutes).padStart(2, '0')}:${seconds.toFixed(3).padStart(6, '0')}`;
+                    statusDisplay = 'Finished';
+                } else {
+                    // Calculate realistic gap to leader
+                    const gap = result.timeGap;
+                    
+                    // Check if lapped (gap > ~90 seconds for most tracks)
+                    const lapThreshold = baseLapTime * 1.2; // 20% buffer
+                    const lapsDown = Math.floor(gap / lapThreshold);
+                    
+                    if (lapsDown >= 1) {
+                        timeDisplay = `+${lapsDown} lap${lapsDown > 1 ? 's' : ''}`;
+                        statusDisplay = `Lapped`;
+                    } else {
+                        // Show realistic time gaps
+                        if (gap < 60) {
+                            timeDisplay = `+${gap.toFixed(3)}`;
+                        } else {
+                            const gapMinutes = Math.floor(gap / 60);
+                            const gapSeconds = gap % 60;
+                            timeDisplay = `+${gapMinutes}:${gapSeconds.toFixed(3).padStart(6, '0')}`;
+                        }
+                        statusDisplay = 'Finished';
+                    }
+                }
+                
+                row.innerHTML = `
+                    <td><span class="position-badge ${posClass} ${isDNF ? 'dnf' : ''}">${isDNF ? 'DNF' : finishPosition}</span></td>
+                    <td><strong>${driverCode}</strong></td>
+                    <td>${data.team}</td>
+                    <td><strong>${timeDisplay}</strong></td>
+                    <td class="hide-mobile">P${data.qualiPos}</td>
+                    <td class="hide-mobile"><span style="${changeClass}"><strong>${changeText}</strong></span></td>
+                    <td class="hide-mobile">${statusDisplay}</td>
+                    <td class="hide-mobile">${data.confidence.toFixed(1)}%</td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        // Display qualifying grid
+        function displayQualifyingGrid(qualiPositions) {
+            const grid = document.getElementById('qualifying-grid');
+            grid.innerHTML = '';
+            
+            // Convert positions object to sorted array
+            const sortedQuali = Object.entries(qualiPositions)
+                .map(([driver, pos]) => ({ driver, pos }))
+                .sort((a, b) => a.pos - b.pos);
+            
+            sortedQuali.forEach(({ driver, pos }) => {
+                const driverData = drivers[driver];
+                const qualiItem = document.createElement('div');
+                qualiItem.className = 'quali-position';
+                
+                let posClass = '';
+                if (pos === 1) posClass = 'pole';
+                else if (pos === 2) posClass = 'front-row';
+                else if (pos <= 10) posClass = 'q3';
+                
+                const qualiTime = (driverData.basePace - 1.2 - (f1Tracks[currentTrack].teamSuitability[driverData.team] - 0.5) * 0.8).toFixed(3);
+                
+                qualiItem.innerHTML = `
+                    <div class="quali-pos-number ${posClass}">${pos}</div>
+                    <div class="quali-driver-info">
+                        <div class="quali-driver-name">${driver}</div>
+                        <div class="quali-team-name">${driverData.team}</div>
+                    </div>
+                    <div class="quali-time">${qualiTime}s</div>
+                `;
+                
+                grid.appendChild(qualiItem);
+            });
+        }
+
+        // Regenerate qualifying session
+        function regenerateQualifying() {
+            const track = f1Tracks[currentTrack];
+            currentQualiGrid = simulateQualifying(track);
+            displayQualifyingGrid(currentQualiGrid);
+            updatePredictions();
+        }
+
+        // Toggle qualifying edit mode
+        function toggleQualiEdit() {
+            editModeActive = !editModeActive;
+            const editPanel = document.getElementById('quali-edit-mode');
+            const normalGrid = document.getElementById('qualifying-grid');
+            
+            if (editModeActive) {
+                originalQualiGrid = { ...currentQualiGrid };
+                editPanel.style.display = 'block';
+                normalGrid.style.display = 'none';
+                setupQualiEditGrid();
+            } else {
+                editPanel.style.display = 'none';
+                normalGrid.style.display = 'grid';
+            }
+        }
+
+        // Setup editable qualifying grid
+        function setupQualiEditGrid() {
+            const editGrid = document.getElementById('quali-edit-grid');
+            editGrid.innerHTML = '';
+            
+            // Create sorted array for editing
+            const sortedQuali = Object.entries(currentQualiGrid)
+                .map(([driver, pos]) => ({ driver, pos }))
+                .sort((a, b) => a.pos - b.pos);
+            
+            sortedQuali.forEach(({ driver, pos }) => {
+                const driverData = drivers[driver];
+                const editItem = document.createElement('div');
+                editItem.className = 'quali-edit-item';
+                editItem.draggable = true;
+                editItem.dataset.driver = driver;
+                editItem.dataset.position = pos;
+                
+                editItem.innerHTML = `
+                    <div class="quali-edit-pos">${pos}</div>
+                    <div class="quali-edit-driver">
+                        <div class="quali-edit-driver-name">${driver}</div>
+                        <div class="quali-edit-team">${driverData.team}</div>
+                    </div>
+                `;
+                
+                // Add drag and drop functionality
+                editItem.addEventListener('dragstart', handleDragStart);
+                editItem.addEventListener('dragover', handleDragOver);
+                editItem.addEventListener('drop', handleDrop);
+                editItem.addEventListener('dragend', handleDragEnd);
+                
+                editGrid.appendChild(editItem);
+            });
+        }
+
+        // Drag and drop handlers
+        let draggedElement = null;
+
+        function handleDragStart(e) {
+            draggedElement = e.target;
+            e.target.classList.add('dragging');
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.target.closest('.quali-edit-item')?.classList.add('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const target = e.target.closest('.quali-edit-item');
+            if (target && draggedElement && target !== draggedElement) {
+                // Swap positions
+                const draggedPos = draggedElement.dataset.position;
+                const targetPos = target.dataset.position;
+                const draggedDriver = draggedElement.dataset.driver;
+                const targetDriver = target.dataset.driver;
+                
+                // Update the grid
+                currentQualiGrid[draggedDriver] = parseInt(targetPos);
+                currentQualiGrid[targetDriver] = parseInt(draggedPos);
+                
+                // Re-setup the grid
+                setupQualiEditGrid();
+            }
+            document.querySelectorAll('.quali-edit-item').forEach(item => {
+                item.classList.remove('drag-over');
+            });
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+            document.querySelectorAll('.quali-edit-item').forEach(item => {
+                item.classList.remove('drag-over');
+            });
+        }
+
+        // Apply qualifying changes
+        function applyQualiChanges() {
+            editModeActive = false;
+            document.getElementById('quali-edit-mode').style.display = 'none';
+            document.getElementById('qualifying-grid').style.display = 'grid';
+            displayQualifyingGrid(currentQualiGrid);
+            updatePredictions();
+        }
+
+        // Cancel qualifying edit
+        function cancelQualiEdit() {
+            currentQualiGrid = { ...originalQualiGrid };
+            editModeActive = false;
+            document.getElementById('quali-edit-mode').style.display = 'none';
+            document.getElementById('qualifying-grid').style.display = 'grid';
+        }
+
+        // Update feature importance bars
+        function updateFeatureBars() {
+            const features = [
+                { name: 'Track Suitability', value: featureWeights.track },
+                { name: 'Clean Air Race Pace', value: featureWeights.pace },
+                { name: 'Qualifying Performance', value: featureWeights.quali },
+                { name: 'Team Performance Score', value: featureWeights.team },
+                { name: 'Weather Conditions', value: featureWeights.weather }
+            ];
+            
+            const container = document.getElementById('feature-bars');
+            container.innerHTML = '';
+            
+            features.forEach(feature => {
+                const bar = document.createElement('div');
+                bar.className = 'feature-bar';
+                bar.innerHTML = `
+                    <div class="feature-name">${feature.name}</div>
+                    <div class="bar-container">
+                        <div class="bar-fill" style="width: ${feature.value * 100}%">
+                            <span class="bar-value">${Math.round(feature.value * 100)}%</span>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(bar);
+            });
+        }
+
+        // Update model performance metrics based on track complexity
+        function updateModelMetrics(track) {
+            const complexity = (track.characteristics.Overtaking + track.weather.rain) / 2;
+            const error = 1.8 + (complexity / 100) * 1.2; // More complex tracks = higher error
+            const accuracy = Math.max(82, 95 - (complexity / 10)); // Complex tracks = lower accuracy
+            
+            document.getElementById('model-error').textContent = error.toFixed(2) + 's';
+            document.getElementById('model-accuracy').textContent = Math.round(accuracy) + '%';
+        }
+
+        // Initialize when page loads
+        window.addEventListener('load', () => {
+            initializeApp();
+        });
+    </script>
+</body>
+</html>
