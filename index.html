@@ -528,16 +528,78 @@
         .position-change-positive {
             color: var(--accent-green);
             font-weight: 700;
+            background: rgba(0, 212, 100, 0.15);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
         }
 
         .position-change-negative {
             color: var(--f1-red);
             font-weight: 700;
+            background: rgba(225, 6, 0, 0.15);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
         }
 
         .position-change-neutral {
             color: var(--text-secondary);
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
         }
+
+        .change-arrow {
+            font-size: 0.8rem;
+            font-weight: 900;
+        }
+
+        .biggest-gainer {
+            background: linear-gradient(90deg, rgba(0, 212, 100, 0.2), rgba(0, 212, 100, 0.05));
+            border-left: 3px solid var(--accent-green);
+        }
+
+        .biggest-loser {
+            background: linear-gradient(90deg, rgba(225, 6, 0, 0.2), rgba(225, 6, 0, 0.05));
+            border-left: 3px solid var(--f1-red);
+        }
+
+        .position-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .stat-positive { color: var(--accent-green); }
+        .stat-negative { color: var(--f1-red); }
+        .stat-neutral { color: var(--accent-blue); }
 
         /* Model Tuning Panel */
         .tuning-panel {
@@ -1183,6 +1245,12 @@
                 <h2 class="card-title">🏁 Complete Race Results</h2>
                 <span class="info-icon" title="Full race simulation showing all 20 drivers with realistic time gaps, positions gained/lost, and lapped status">?</span>
             </div>
+            
+            <!-- Position Change Statistics -->
+            <div class="position-stats" id="position-stats">
+                <!-- Stats will be populated by JavaScript -->
+            </div>
+            
             <div style="overflow-x: auto;">
                 <table class="results-table">
                     <thead>
@@ -1191,8 +1259,8 @@
                             <th>Driver</th>
                             <th>Team</th>
                             <th>Time/Gap</th>
-                            <th class="hide-mobile">Grid</th>
-                            <th class="hide-mobile">+/-</th>
+                            <th class="hide-mobile">Start</th>
+                            <th>Position Change</th>
                             <th class="hide-mobile">Status</th>
                             <th class="hide-mobile">Confidence</th>
                         </tr>
@@ -2553,20 +2621,61 @@
             });
             
             // Process results and determine lapped status
+            let biggestGainer = null;
+            let biggestLoser = null;
+            let maxGain = 0;
+            let maxLoss = 0;
+            let totalPositionChanges = 0;
+            let driversWhoGained = 0;
+            let driversWhoLost = 0;
+            
             raceResults.forEach((result, index) => {
                 const { driverCode, data, raceTime, isDNF, finishPosition } = result;
+                
+                // Calculate position change from grid (Starting Position - Final Position)
+                const startPos = data.qualiPos;
+                const finalPos = isDNF ? 20 : finishPosition;
+                const positionChange = startPos - finalPos; // Positive = gained positions, Negative = lost positions
+                
+                // Track biggest movers
+                if (positionChange > maxGain) {
+                    maxGain = positionChange;
+                    biggestGainer = { driver: driverCode, change: positionChange, team: data.team };
+                }
+                if (positionChange < maxLoss) {
+                    maxLoss = positionChange;
+                    biggestLoser = { driver: driverCode, change: positionChange, team: data.team };
+                }
+                
+                if (positionChange > 0) driversWhoGained++;
+                if (positionChange < 0) driversWhoLost++;
+                totalPositionChanges += Math.abs(positionChange);
+                
                 const row = document.createElement('tr');
+                
+                // Highlight biggest mover rows
+                if (positionChange === maxGain && maxGain > 0) {
+                    row.classList.add('biggest-gainer');
+                } else if (positionChange === maxLoss && maxLoss < 0) {
+                    row.classList.add('biggest-loser');
+                }
                 
                 const posClass = finishPosition === 1 ? 'gold' : finishPosition === 2 ? 'silver' : finishPosition === 3 ? 'bronze' : '';
                 
-                // Calculate position change from grid
-                const finalPos = isDNF ? 20 : finishPosition; // DNF counted as last
-                const positionChange = data.qualiPos - finalPos;
-                const changeText = positionChange > 0 ? `+${positionChange}` : 
-                                 positionChange < 0 ? `${positionChange}` : '0';
-                const changeClass = positionChange > 0 ? 'color: var(--accent-green)' : 
-                                  positionChange < 0 ? 'color: var(--f1-red)' : 
-                                  'color: var(--text-secondary)';
+                let changeText, changeClass, arrow;
+                if (positionChange > 0) {
+                    changeText = `+${positionChange}`; // Gained positions
+                    changeClass = 'position-change-positive';
+                    arrow = '▲';
+                } else if (positionChange < 0) {
+                    changeText = `${positionChange}`; // Lost positions (already negative)
+                    changeClass = 'position-change-negative';
+                    arrow = '▼';
+                } else {
+                    changeText = '0'; // No change
+                    changeClass = 'position-change-neutral';
+                    arrow = '●';
+                }
                 
                 let timeDisplay, statusDisplay;
                 
@@ -2621,13 +2730,23 @@
                     <td><strong>${driverCode}</strong></td>
                     <td>${data.team}</td>
                     <td><strong>${timeDisplay}</strong></td>
-                    <td class="hide-mobile">P${data.qualiPos}</td>
-                    <td class="hide-mobile"><span style="${changeClass}"><strong>${changeText}</strong></span></td>
+                    <td class="hide-mobile">P${startPos}</td>
+                    <td><span class="${changeClass}"><span class="change-arrow">${arrow}</span>${changeText}</span></td>
                     <td class="hide-mobile">${statusDisplay}</td>
                     <td class="hide-mobile">${data.confidence.toFixed(1)}%</td>
                 `;
                 
                 tbody.appendChild(row);
+            });
+            
+            // Update position change statistics
+            updatePositionStats({
+                biggestGainer,
+                biggestLoser,
+                driversWhoGained,
+                driversWhoLost,
+                totalPositionChanges,
+                averageChange: totalPositionChanges / 20
             });
         }
 
@@ -2822,6 +2941,62 @@
             
             document.getElementById('model-error').textContent = error.toFixed(2) + 's';
             document.getElementById('model-accuracy').textContent = Math.round(accuracy) + '%';
+        }
+
+        // Update position change statistics
+        function updatePositionStats(stats) {
+            const container = document.getElementById('position-stats');
+            container.innerHTML = '';
+            
+            const statItems = [
+                {
+                    label: 'Biggest Gainer',
+                    value: stats.biggestGainer ? `${stats.biggestGainer.driver}` : 'None',
+                    extra: stats.biggestGainer ? `+${stats.biggestGainer.change}` : '',
+                    class: 'stat-positive'
+                },
+                {
+                    label: 'Biggest Loser', 
+                    value: stats.biggestLoser ? `${stats.biggestLoser.driver}` : 'None',
+                    extra: stats.biggestLoser ? `${stats.biggestLoser.change}` : '',
+                    class: 'stat-negative'
+                },
+                {
+                    label: 'Drivers Who Gained',
+                    value: stats.driversWhoGained,
+                    extra: 'positions',
+                    class: 'stat-positive'
+                },
+                {
+                    label: 'Drivers Who Lost',
+                    value: stats.driversWhoLost,
+                    extra: 'positions', 
+                    class: 'stat-negative'
+                },
+                {
+                    label: 'Total Position Changes',
+                    value: stats.totalPositionChanges,
+                    extra: 'moves',
+                    class: 'stat-neutral'
+                },
+                {
+                    label: 'Average Change',
+                    value: stats.averageChange.toFixed(1),
+                    extra: 'per driver',
+                    class: 'stat-neutral'
+                }
+            ];
+            
+            statItems.forEach(stat => {
+                const statDiv = document.createElement('div');
+                statDiv.className = 'stat-item';
+                statDiv.innerHTML = `
+                    <div class="stat-value ${stat.class}">${stat.value}</div>
+                    <div class="stat-label">${stat.label}</div>
+                    ${stat.extra ? `<div class="stat-label" style="font-size: 0.7rem; margin-top: 0.25rem;">${stat.extra}</div>` : ''}
+                `;
+                container.appendChild(statDiv);
+            });
         }
 
         // Initialize when page loads
