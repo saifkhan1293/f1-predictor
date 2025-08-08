@@ -1,0 +1,70 @@
+{
+  "name": "f1-ai-race-predictor",
+  "version": "1.0.0",
+  "description": "AI-powered Formula 1 race prediction dashboard with realistic simulations across all 24 F1 circuits",
+  "main": "index.html",
+  "scripts": {
+    "start": "python -m http.server 8000",
+    "serve": "npx serve .",
+    "dev": "npx live-server --port=8000 --open=/",
+    "build": "echo 'No build process needed - vanilla HTML/CSS/JS'",
+    "test": "echo 'Tests coming soon'",
+    "lint": "echo 'Linting coming soon'",
+    "validate": "html5validator --root . --also-check-css",
+    "deploy": "echo 'Ready for deployment - upload to web server'"
+  },
+  "keywords": [
+    "f1",
+    "formula-1",
+    "ai",
+    "prediction",
+    "racing",
+    "machine-learning",
+    "data-analysis",
+    "sports",
+    "simulation",
+    "javascript",
+    "vanilla-js",
+    "web-app",
+    "motorsport"
+  ],
+  "author": {
+    "name": "SAK",
+    "email": "your.email@example.com",
+    "url": "https://github.com/yourusername"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/f1-ai-race-predictor.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/f1-ai-race-predictor/issues"
+  },
+  "homepage": "https://yourusername.github.io/f1-ai-race-predictor",
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=6.0.0"
+  },
+  "devDependencies": {
+    "live-server": "^1.2.2",
+    "serve": "^14.2.1",
+    "html5validator": "^0.4.2"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead",
+    "not ie <= 11"
+  ],
+  "files": [
+    "index.html",
+    "css/",
+    "js/",
+    "assets/",
+    "docs/",
+    "examples/",
+    "README.md",
+    "LICENSE"
+  ]
+}
